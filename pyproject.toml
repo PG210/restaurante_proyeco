@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["icard"]
+extend-exclude = ["envs", "icard/icard_react", "**/migrations"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "icard.settings"
+pythonpath = ["icard"]
+testpaths = ["icard"]
+python_files = ["tests.py", "test_*.py"]

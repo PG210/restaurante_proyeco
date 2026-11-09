@@ -1,38 +1,28 @@
-"""
-URL configuration for icard project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-
-from drf_yasg.views import get_schema_view
+from django.urls import include, path
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework.permissions import AllowAny
 
-#=== importar el api rest de usuarios =====
+from categories.api.router import router_category
+from orders.api.router import router_orders
+from products.api.router import router_product
+from tables.api.router import router_table
 from users.api.router import router_user
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Proyecto de react",
-      default_version='v1',
-      description="Documentación del proyecto",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="pedro@evolucion.co"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
+    openapi.Info(
+        title='Proyecto de react',
+        default_version='v1',
+        description='Documentación del proyecto',
+        terms_of_service='https://www.google.com/policies/terms/',
+        contact=openapi.Contact(email='pedro@evolucion.co'),
+        license=openapi.License(name='BSD License'),
+    ),
+    public=True,
+    permission_classes=[AllowAny],
 )
 
 
@@ -40,9 +30,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    #============ llamar a la api de usuarios =====
     path('api/', include(router_user.urls)),
-    #==== instanciar para retornar los usuarios =============
-    path('api/', include('users.api.router'))
-
+    path('api/', include('users.api.router')),
+    path('api/', include(router_category.urls)),
+    path('api/', include(router_product.urls)),
+    path('api/', include(router_table.urls)),
+    path('api/', include(router_orders.urls)),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
