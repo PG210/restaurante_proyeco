@@ -1,0 +1,32 @@
+.kitchen-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+
+  &__column {
+    min-width: 0;
+  }
+
+  &__note {
+    margin-top: 8px;
+  }
+
+  &__note-text {
+    margin-top: 6px !important;
+    padding: 6px 8px;
+    background: #fffaf0;
+    border-left: 3px solid #fbbd08;
+    white-space: pre-wrap;
+  }
+
+  &__card--late {
+    border: 2px solid #db2828 !important;
+
+    .meta {
+      color: #db2828 !important;
+      font-weight: bold;
+    }
+  }
+}

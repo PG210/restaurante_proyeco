@@ -1,0 +1,73 @@
+import routesAdmin from "../../routes/routes.admin";
+import {
+  ADMIN_MENU,
+  ADMIN_SECTIONS,
+  ALL_ADMIN_SECTIONS,
+  canAccessSection,
+  getVisibleSections,
+  tableDetailPath,
+} from "../adminSections";
+import { PERMISSIONS } from "../permissions";
+
+const STAFF_USER = { is_staff: true, permissions: [] };
+const USER_WITHOUT_ROLE = { is_staff: false, permissions: [] };
+const WAITER_USER = { is_staff: false, permissions: [PERMISSIONS.VIEW_ORDER, PERMISSIONS.ADD_ORDER] };
+const COOK_USER = { is_staff: false, permissions: [PERMISSIONS.VIEW_ORDER, PERMISSIONS.PREPARE_ORDER] };
+const ADMIN_ONLY_SECTIONS = ALL_ADMIN_SECTIONS.filter((section) => section.adminOnly);
+
+function visiblePaths(user) {
+  return getVisibleSections(ADMIN_MENU, user).map((section) => section.path);
+}
+
+describe("admin sections", () => {
+  it("shows every menu section to a staff user", () => {
+    expect(getVisibleSections(ADMIN_MENU, STAFF_USER)).toEqual(ADMIN_MENU);
+  });
+
+  it("shows only orders to a waiter", () => {
+    expect(visiblePaths(WAITER_USER)).toEqual([ADMIN_SECTIONS.orders.path]);
+  });
+
+  it("shows orders and kitchen to a cook", () => {
+    expect(visiblePaths(COOK_USER)).toEqual([ADMIN_SECTIONS.orders.path, ADMIN_SECTIONS.kitchen.path]);
+  });
+
+  it("shows nothing to a user without permissions", () => {
+    expect(visiblePaths(USER_WITHOUT_ROLE)).toEqual([]);
+  });
+
+  it.each(ADMIN_ONLY_SECTIONS.map((section) => [section.path, section]))(
+    "denies %s to a non-staff user even with every order permission",
+    (_, section) => {
+      const user = { is_staff: false, permissions: Object.values(PERMISSIONS) };
+      expect(canAccessSection(section, user)).toBe(false);
+    },
+  );
+
+  it("denies a permission-protected section when there is no user", () => {
+    expect(canAccessSection(ADMIN_SECTIONS.orders, undefined)).toBe(false);
+  });
+
+  it("keeps the table detail out of the menu", () => {
+    expect(ADMIN_MENU).not.toContain(ADMIN_SECTIONS.tableDetail);
+  });
+
+  it("builds the table detail path from its route pattern", () => {
+    expect(tableDetailPath(7)).toBe("/admin/table/7");
+  });
+
+  it.each(ALL_ADMIN_SECTIONS.map((section) => [section.path, section]))(
+    "registers %s as a route with a page and the same access rules",
+    (path, section) => {
+      const route = routesAdmin.find((candidate) => candidate.path === path);
+
+      expect(route.adminOnly).toBe(section.adminOnly);
+      expect(route.requiredPermission).toBe(section.requiredPermission);
+      expect(route.component).toEqual(expect.any(Function));
+    },
+  );
+
+  it("does not register admin routes outside the sections", () => {
+    expect(routesAdmin).toHaveLength(ALL_ADMIN_SECTIONS.length);
+  });
+});
