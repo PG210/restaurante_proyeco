@@ -7,4 +7,7 @@ export * from "./useFormModal";
 export * from "./useOrder";
 export * from "./usePolling";
 export * from "./useSelection";
+export * from "./useThrottlePause";
+export * from "./useCart";
+export * from "./useNotifications";
 export * from "./useRolePermissions";

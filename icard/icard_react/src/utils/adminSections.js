@@ -26,6 +26,7 @@ export const ADMIN_SECTIONS = {
     requiredPermission: PERMISSIONS.PREPARE_ORDER,
   },
   tables: { path: "/admin/tables", label: "Mesas", icon: "table", adminOnly: true },
+  tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },
   categories: { path: "/admin/categories", label: "Categorías", icon: "folder", adminOnly: true },
   products: { path: "/admin/products", label: "Productos", icon: "cart", adminOnly: true },
   users: { path: "/admin/users", label: "Usuarios", icon: "users", adminOnly: true },

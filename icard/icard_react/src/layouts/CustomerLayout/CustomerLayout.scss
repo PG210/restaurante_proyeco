@@ -1,0 +1,57 @@
+.customer-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  margin: 0 auto;
+  background: #fafafa;
+
+  &__header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #1b1c1d;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 16px 16px 90px;
+  }
+
+  &__nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 8px 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: #555;
+      font-size: 12px;
+
+      &.active {
+        color: #2185d0;
+        font-weight: bold;
+      }
+
+      .ui.label {
+        margin-top: 2px;
+      }
+    }
+  }
+}

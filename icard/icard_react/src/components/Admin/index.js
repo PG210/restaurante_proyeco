@@ -8,3 +8,4 @@ export * from "./Product";
 export * from "./Table";
 export * from "./Order";
 export * from "./Permissions";
+export * from "./NotificationBell";

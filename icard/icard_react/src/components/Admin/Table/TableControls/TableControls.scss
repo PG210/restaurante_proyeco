@@ -1,0 +1,11 @@
+.table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+
+  &__actions {
+    margin-left: auto;
+  }
+}

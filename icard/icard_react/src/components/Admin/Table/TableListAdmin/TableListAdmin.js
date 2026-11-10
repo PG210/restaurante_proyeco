@@ -3,10 +3,19 @@ import { Button, Checkbox, Icon } from "semantic-ui-react";
 import "./TableListAdmin.scss";
 import { TableAdmin } from "../TableAdmin";
 
-export function TableListAdmin({ tables, onReload, autoReload, onToggleAutoReload, onSelectTable }) {
+export function TableListAdmin({
+  tables,
+  onReload,
+  autoReload,
+  onToggleAutoReload,
+  onSelectTable,
+  canToggleOpen,
+  togglingTableId,
+  onToggleOpen,
+}) {
   return (
     <div className="tables-list-admin">
-      <Button icon primary className="tables-list-admin__reload" onClick={onReload}>
+      <Button icon primary className="tables-list-admin__reload" aria-label="Recargar mesas" onClick={onReload}>
         <Icon name="refresh" />
       </Button>
 
@@ -16,7 +25,14 @@ export function TableListAdmin({ tables, onReload, autoReload, onToggleAutoReloa
       </div>
 
       {(tables || []).map((table) => (
-        <TableAdmin key={table.id} table={table} onSelect={onSelectTable} />
+        <TableAdmin
+          key={table.id}
+          table={table}
+          onSelect={onSelectTable}
+          canToggleOpen={canToggleOpen}
+          toggling={togglingTableId === table.id}
+          onToggleOpen={onToggleOpen}
+        />
       ))}
     </div>
   );

@@ -58,6 +58,7 @@ export const BULK_ADVANCE_LABELS = {
 export const DEFAULT_BULK_ADVANCE_LABEL = "Avanzar seleccionados";
 
 export const TABLE_STATE = {
+  BILL: "bill",
   FREE: "free",
   PENDING: "pending",
   PREPARING: "preparing",
@@ -114,7 +115,8 @@ export function isLate(createdAt, now, limitMinutes = KITCHEN_LATE_MINUTES) {
   return getWaitingMinutes(createdAt, now) >= limitMinutes;
 }
 
-export function getTableState({ pending, preparing, ready }) {
+export function getTableState({ pending, preparing, ready, bill_requested: billRequested }) {
+  if (billRequested) return TABLE_STATE.BILL;
   if (ready > 0) return TABLE_STATE.READY;
   if (preparing > 0) return TABLE_STATE.PREPARING;
   if (pending > 0) return TABLE_STATE.PENDING;

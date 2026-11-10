@@ -1,0 +1,19 @@
+.notification-bell {
+  &__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__count {
+    position: absolute !important;
+    top: -8px;
+    right: -6px;
+  }
+
+  .menu {
+    min-width: 280px !important;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}

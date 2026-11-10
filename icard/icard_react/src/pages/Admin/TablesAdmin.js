@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader } from "semantic-ui-react";
-import { AddEditTableForm, HeaderPage, TableTablesAdmin } from "../../components/Admin";
+import { AddEditTableForm, HeaderPage, TableQr, TableTablesAdmin } from "../../components/Admin";
 import { ModalBasic } from "../../components/Common";
 import { useFormModal, useTable } from "../../hooks";
+import { ADMIN_SECTIONS } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
 
 export function TablesAdmin() {
+  const navigate = useNavigate();
   const { show, title, content, openModal, closeModal } = useFormModal();
-  const { loading, tables, getTables, deleteTable } = useTable();
+  const { tables, getTables, deleteTable } = useTable();
 
   const loadTables = useCallback(() => getTables().catch(notifyError), [getTables]);
 
@@ -23,6 +26,10 @@ export function TablesAdmin() {
     openModal("Actualizar mesa", <AddEditTableForm onClose={closeModal} onRefetch={loadTables} table={table} />);
   };
 
+  const showQr = (table) => {
+    openModal(`QR de la mesa ${table.number}`, <TableQr table={table} onRegenerated={loadTables} />);
+  };
+
   const onDeleteTable = async (table) => {
     if (!window.confirm(`¿Estás seguro de eliminar la mesa ${table.number}?`)) return;
     try {
@@ -35,14 +42,25 @@ export function TablesAdmin() {
 
   return (
     <>
-      <HeaderPage title="Administración de Mesas" btnTitle="Crear nueva mesa" btnClick={addTable} />
+      <HeaderPage
+        title="Administración de Mesas"
+        btnTitle="Crear nueva mesa"
+        btnClick={addTable}
+        btnTitleTwo="Imprimir QR"
+        btnClickTwo={() => navigate(ADMIN_SECTIONS.tablesQr.path)}
+      />
 
-      {loading ? (
+      {tables === null ? (
         <Loader active inline="centered">
           Cargando...
         </Loader>
       ) : (
-        <TableTablesAdmin tables={tables} updateTable={updateTable} onDeleteTable={onDeleteTable} />
+        <TableTablesAdmin
+          tables={tables}
+          updateTable={updateTable}
+          onDeleteTable={onDeleteTable}
+          onShowQr={showQr}
+        />
       )}
 
       <ModalBasic show={show} onClose={closeModal} title={title}>

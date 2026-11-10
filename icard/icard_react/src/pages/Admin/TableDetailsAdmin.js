@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button, Icon, Loader } from "semantic-ui-react";
 import { tableApi } from "../../api/table";
-import { AddOrderForm, CancelOrderForm, HeaderPage, OrdersTable } from "../../components/Admin";
+import { AddOrderForm, CancelOrderForm, HeaderPage, OrdersTable, TableControls } from "../../components/Admin";
 import { ModalBasic } from "../../components/Common";
 import { useAuth, useFormModal, useOrder, usePolling } from "../../hooks";
 import { ADMIN_HOME_PATH } from "../../utils/adminSections";
@@ -10,6 +10,7 @@ import { ORDERS_POLL_MS } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
 import { OPEN_ORDER_STATUSES } from "../../utils/orderStatus";
 import { PERMISSIONS, hasPermission } from "../../utils/permissions";
+import { closeTableConfirmation } from "../../utils/tableStatus";
 
 export function TableDetailsAdmin() {
   const { id: tableId } = useParams();
@@ -17,6 +18,7 @@ export function TableDetailsAdmin() {
   const { show, title, content, openModal, closeModal } = useFormModal();
   const { orders, getOrders, advanceOrder, advanceOrders } = useOrder();
   const [table, setTable] = useState(null);
+  const [tableBusy, setTableBusy] = useState(false);
 
   const loadOrders = useCallback(
     () =>
@@ -29,15 +31,34 @@ export function TableDetailsAdmin() {
     [getOrders, tableId],
   );
 
-  useEffect(() => {
-    tableApi.retrieve(tableId).then(setTable).catch(notifyError);
-  }, [tableId]);
+  const loadTable = useCallback(() => tableApi.retrieve(tableId).then(setTable).catch(notifyError), [tableId]);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
+    loadTable();
     loadOrders();
-  }, [loadOrders]);
+  }, [loadTable, loadOrders]);
 
-  usePolling(loadOrders, ORDERS_POLL_MS);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  usePolling(refresh, ORDERS_POLL_MS);
+
+  const runTableAction = async (action) => {
+    setTableBusy(true);
+    try {
+      setTable(await action(tableId));
+    } catch (error) {
+      notifyError(error);
+    } finally {
+      setTableBusy(false);
+    }
+  };
+
+  const onCloseTable = () => {
+    if (!window.confirm(closeTableConfirmation(table))) return;
+    runTableAction(tableApi.close);
+  };
 
   const onAddOrder = () => {
     openModal(
@@ -86,6 +107,17 @@ export function TableDetailsAdmin() {
         btnTitle={canAddOrders ? "Añadir pedido" : undefined}
         btnClick={onAddOrder}
       />
+
+      {table && (
+        <TableControls
+          table={table}
+          user={auth.me}
+          busy={tableBusy}
+          onOpen={() => runTableAction(tableApi.open)}
+          onClose={onCloseTable}
+          onAttendBill={() => runTableAction(tableApi.attendBill)}
+        />
+      )}
 
       {orders === null ? (
         <Loader active inline="centered">

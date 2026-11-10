@@ -133,4 +133,26 @@ describe("apiRequest", () => {
       "number: Ya existe una mesa con este número.",
     );
   });
+
+  it("exposes Retry-After and a friendly message when the API throttles the request", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ...mockResponse(429, { detail: "Request was throttled." }),
+      headers: { get: (name) => (name === "Retry-After" ? "17" : null) },
+    });
+
+    await expect(apiRequest("/api/client/abc/orders/", { auth: false })).rejects.toMatchObject({
+      status: 429,
+      retryAfterSeconds: 17,
+      message: "Demasiadas solicitudes. Espera unos segundos e inténtalo de nuevo.",
+    });
+  });
+
+  it("leaves Retry-After empty when the header is missing", async () => {
+    global.fetch.mockResolvedValueOnce(mockResponse(429, {}));
+
+    await expect(apiRequest("/api/client/abc/", { auth: false })).rejects.toMatchObject({
+      status: 429,
+      retryAfterSeconds: null,
+    });
+  });
 });

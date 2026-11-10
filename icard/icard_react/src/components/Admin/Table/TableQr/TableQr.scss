@@ -1,0 +1,17 @@
+.table-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  &__url {
+    font-size: 11px;
+    color: #777;
+    word-break: break-all;
+    text-align: center;
+  }
+
+  .ui.button {
+    margin: 0;
+  }
+}

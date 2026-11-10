@@ -5,14 +5,22 @@
   flex-direction: column;
   align-items: center;
   padding: 10px;
-  background: none;
   border: 2px solid transparent;
   border-radius: 8px;
-  font: inherit;
 
-  &:hover {
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
     cursor: pointer;
-    opacity: 0.6;
+
+    &:hover {
+      opacity: 0.6;
+    }
   }
 
   svg {
@@ -32,6 +40,14 @@
     border-color: #21ba45;
   }
 
+  &--bill {
+    border-color: #db2828;
+  }
+
+  &--closed svg {
+    opacity: 0.4;
+  }
+
   &__labels {
     display: flex;
     flex-wrap: wrap;
@@ -42,5 +58,9 @@
     .ui.label {
       margin: 0;
     }
+  }
+
+  &__toggle {
+    margin-top: 10px;
   }
 }

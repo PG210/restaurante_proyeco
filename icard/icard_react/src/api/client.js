@@ -3,18 +3,36 @@ import { getRefreshToken, getToken, removeTokens, setToken } from "./token";
 
 export const HTTP_NO_CONTENT = 204;
 export const HTTP_UNAUTHORIZED = 401;
+export const HTTP_FORBIDDEN = 403;
+export const HTTP_NOT_FOUND = 404;
+export const HTTP_TOO_MANY_REQUESTS = 429;
 
 const REFRESH_PATH = "/api/auth/refresh/";
 const SESSION_EXPIRED_MESSAGE = "Tu sesión expiró. Inicia sesión de nuevo.";
 const DEFAULT_ERROR_MESSAGE = "No se pudo completar la operación.";
+const TOO_MANY_REQUESTS_MESSAGE = "Demasiadas solicitudes. Espera unos segundos e inténtalo de nuevo.";
+const RETRY_AFTER_HEADER = "Retry-After";
 
 export class ApiError extends Error {
-  constructor(message, status, data = null) {
+  constructor(message, status, data = null, retryAfterSeconds = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
+}
+
+function parseRetryAfter(response) {
+  const seconds = Number.parseInt(response.headers?.get?.(RETRY_AFTER_HEADER), 10);
+  return Number.isNaN(seconds) ? null : seconds;
+}
+
+function buildApiError(response, data) {
+  if (response.status === HTTP_TOO_MANY_REQUESTS) {
+    return new ApiError(TOO_MANY_REQUESTS_MESSAGE, response.status, data, parseRetryAfter(response));
+  }
+  return new ApiError(extractErrorMessage(data), response.status, data);
 }
 
 let sessionExpiredHandler = () => {};
@@ -97,6 +115,6 @@ async function sendWithRefresh(path, options) {
 export async function apiRequest(path, { method = "GET", body, auth = true } = {}) {
   const response = await sendWithRefresh(path, { method, body, auth });
   const data = await parseBody(response);
-  if (!response.ok) throw new ApiError(extractErrorMessage(data), response.status, data);
+  if (!response.ok) throw buildApiError(response, data);
   return data;
 }
