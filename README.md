@@ -25,6 +25,7 @@ cp icard/.env.example icard/.env          # completar los valores
 cd icard
 python manage.py migrate
 python manage.py seed_roles               # crea los roles mesero, cocina y caja con sus permisos
+python manage.py generate_table_tokens    # código QR para las mesas creadas antes de tener QR
 python manage.py createsuperuser          # el login del panel usa el email
 python manage.py runserver                # http://127.0.0.1:8000
 ```
@@ -44,6 +45,14 @@ En PowerShell, el entorno se activa con `.\envs\icard\Scripts\Activate.ps1`.
 | `JWT_ACCESS_MINUTES` | No | `60` |
 | `JWT_REFRESH_DAYS` | No | `7` |
 | `LOGIN_THROTTLE_RATE` | No | `5/min` |
+| `ANON_RATE` | No | `300/min` (carta pública sin sesión, por IP) |
+| `CLIENT_READ_RATE`, `CLIENT_ORDER_RATE`, `CLIENT_BILL_RATE` | No | `60/min`, `10/min`, `3/min` (por mesa) |
+| `CLIENT_IP_RATE` | No | `300/min` (rutas del cliente, por IP) |
+| `CLIENT_MAX_ITEMS_PER_ORDER`, `CLIENT_MAX_QUANTITY_PER_ITEM`, `CLIENT_MAX_PENDING_ORDERS_PER_TABLE` | No | `20`, `20`, `50` |
+| `REDIS_URL` | En producción | Vacía (memoria local por proceso) |
+| `NUM_PROXIES` | No | `0` (número de proxies delante de la app) |
+
+En producción, configura `REDIS_URL`. Sin una caché compartida, cada proceso lleva su propio contador y los límites de peticiones reales se multiplican por el número de procesos. Detrás de Nginx u otro proxy, ajusta `NUM_PROXIES` para que la IP del cliente no se pueda falsificar.
 
 Para generar una `DJANGO_SECRET_KEY`:
 
@@ -55,12 +64,26 @@ python -c "from django.core.management.utils import get_random_secret_key as g; 
 
 ```bash
 cd icard/icard_react
-cp .env.example .env                      # REACT_APP_API_URL=http://127.0.0.1:8000
+cp .env.example .env                      # REACT_APP_API_URL y REACT_APP_PUBLIC_URL
 yarn install
 yarn start                                # http://localhost:3000
 ```
 
+| Variable (`icard_react/.env`) | Uso |
+|-------------------------------|-----|
+| `REACT_APP_API_URL` | URL del backend |
+| `REACT_APP_PUBLIC_URL` | URL pública del frontend; es la que llevan los QR de las mesas |
+
 El panel está en <http://localhost:3000/admin>. Inicia sesión con el superusuario y crea al personal en **Usuarios**, asignándole un rol. Lo que puede hacer cada rol se ajusta en **Permisos**.
+
+## Carta del cliente (QR)
+
+1. En **Mesas → Imprimir QR**, imprime el código de cada mesa.
+2. Cuando lleguen los clientes, el mesero abre la mesa desde su detalle (**Abrir mesa**).
+3. El cliente escanea el QR, ve la carta, arma su pedido y lo envía. El pedido llega como pendiente a las mesas y a Cocina.
+4. Desde **Mis pedidos**, el cliente sigue el estado y puede pedir la cuenta; el panel lo muestra en la tarjeta de la mesa.
+
+Una mesa cerrada no acepta pedidos. Si un QR se fotografía o se pierde, regenera su código desde **Mesas → QR**: el código anterior deja de funcionar al instante.
 
 ## Documentación de la API
 
