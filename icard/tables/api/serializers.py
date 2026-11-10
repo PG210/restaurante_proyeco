@@ -21,6 +21,7 @@ class TableAdminSerializer(TableSerializer):
 
 
 class TableSummarySerializer(serializers.ModelSerializer):
+    awaiting_payment = serializers.IntegerField(read_only=True)
     pending = serializers.IntegerField(read_only=True)
     preparing = serializers.IntegerField(read_only=True)
     ready = serializers.IntegerField(read_only=True)
@@ -28,4 +29,13 @@ class TableSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Table
-        fields = ['id', 'number', 'is_open', 'bill_requested', 'pending', 'preparing', 'ready']
+        fields = [
+            'id',
+            'number',
+            'is_open',
+            'bill_requested',
+            'awaiting_payment',
+            'pending',
+            'preparing',
+            'ready',
+        ]

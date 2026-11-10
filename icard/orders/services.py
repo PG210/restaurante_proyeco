@@ -3,14 +3,13 @@ from dataclasses import dataclass
 from django.db import transaction
 from django.utils import timezone
 
-from orders.models import Order, OrderStatus
+from orders.models import OPEN_ORDER_STATUSES, Order, OrderStatus
 from orders.permissions import CANCEL_ORDER, DELIVER_ORDER, PREPARE_ORDER, qualified_permission
+from payments.services import get_or_create_open_bill, initial_order_status
 from products.models import Product
 from tables.models import Table
 from users.models import User
 from users.permissions import user_has_permission
-
-OPEN_STATUSES = (OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY)
 
 NEXT_STATUS = {
     OrderStatus.PENDING: OrderStatus.PREPARING,
@@ -46,20 +45,22 @@ class OrderItem:
 
 
 def create_orders(table: Table, items: list[OrderItem], user: User | None) -> list[Order]:
-    orders = [
-        Order(
-            table=table,
-            product=item.product,
-            quantity=item.quantity,
-            notes=item.notes,
-            price=item.product.price,
-            created_by=user,
-        )
-        for item in items
-    ]
     with transaction.atomic():
-        created_orders = Order.objects.bulk_create(orders)
-    return created_orders
+        bill = get_or_create_open_bill(table)
+        orders = [
+            Order(
+                table=table,
+                bill=bill,
+                status=initial_order_status(bill),
+                product=item.product,
+                quantity=item.quantity,
+                notes=item.notes,
+                price=item.product.price,
+                created_by=user,
+            )
+            for item in items
+        ]
+        return Order.objects.bulk_create(orders)
 
 
 def advance_order(order: Order, user: User) -> Order:
@@ -86,8 +87,10 @@ def advance_orders(order_ids: list[int], user: User) -> list[Order]:
 def cancel_order(order: Order, reason: str, user: User) -> Order:
     with transaction.atomic():
         locked_order = _lock(order)
-        if locked_order.status not in OPEN_STATUSES:
+        if locked_order.status not in OPEN_ORDER_STATUSES:
             raise OrderTransitionError(f'Un pedido {locked_order.get_status_display()} no se puede cancelar.')
+        if locked_order.payment_id is not None:
+            raise OrderTransitionError('El pedido ya está pagado. Anula su cobro antes de cancelarlo.')
         _ensure_transition_permission(user, OrderStatus.CANCELLED)
         locked_order.cancel_reason = reason
         return _set_status(locked_order, OrderStatus.CANCELLED, extra_fields=('cancel_reason',))

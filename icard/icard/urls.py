@@ -37,6 +37,8 @@ urlpatterns = [
     path('api/', include(router_table.urls)),
     path('api/', include(router_orders.urls)),
     path('api/', include('client.api.urls')),
+    path('api/', include('payments.api.urls')),
+    path('api/', include('configuration.api.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

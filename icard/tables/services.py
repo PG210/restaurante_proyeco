@@ -7,6 +7,7 @@ from orders.models import OrderStatus
 from tables.models import Table
 
 SUMMARY_STATUSES = {
+    'awaiting_payment': OrderStatus.AWAITING_PAYMENT,
     'pending': OrderStatus.PENDING,
     'preparing': OrderStatus.PREPARING,
     'ready': OrderStatus.READY,

@@ -1,17 +1,18 @@
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from orders.permissions import VIEW_ORDER
 from orders.permissions import qualified_permission as qualified_order_permission
+from payments.services import TableHasOpenBillError, close_table_checking_bill
 from tables.api.serializers import TableAdminSerializer, TableSerializer, TableSummarySerializer
 from tables.models import Table
 from tables.permissions import ATTEND_BILL_REQUEST, OPEN_TABLE
 from tables.permissions import qualified_permission as qualified_table_permission
 from tables.services import (
     attend_bill_request,
-    close_table,
     open_table,
     regenerate_token,
     tables_with_open_orders_summary,
@@ -41,7 +42,11 @@ class TableApiViewSet(ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[CAN_OPEN_TABLES])
     def close(self, request, pk=None):
-        return self._table_response(close_table(self.get_object()))
+        try:
+            table = close_table_checking_bill(self.get_object(), request.user)
+        except TableHasOpenBillError as error:
+            raise ValidationError({'detail': str(error)}) from error
+        return self._table_response(table)
 
     @action(detail=True, methods=['post'], url_path='attend-bill', permission_classes=[CAN_ATTEND_BILLS])
     def attend_bill(self, request, pk=None):

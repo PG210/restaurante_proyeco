@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework import serializers
 
+from configuration.services import get_settings
 from orders.api.serializers import OrderItemSerializer
 from orders.models import Order
 from orders.services import OrderItem
@@ -9,10 +10,14 @@ from tables.models import Table
 
 class ClientTableSerializer(serializers.ModelSerializer):
     bill_requested = serializers.BooleanField(read_only=True)
+    payment_mode = serializers.SerializerMethodField()
 
     class Meta:
         model = Table
-        fields = ['number', 'is_open', 'bill_requested']
+        fields = ['number', 'is_open', 'bill_requested', 'payment_mode']
+
+    def get_payment_mode(self, table: Table) -> str:
+        return get_settings().payment_mode
 
 
 class ClientOrderSerializer(serializers.ModelSerializer):

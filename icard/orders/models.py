@@ -7,11 +7,16 @@ MIN_ORDER_QUANTITY = 1
 
 
 class OrderStatus(models.TextChoices):
+    AWAITING_PAYMENT = 'AWAITING_PAYMENT', 'awaiting payment'
     PENDING = 'PENDING', 'pending'
     PREPARING = 'PREPARING', 'preparing'
     READY = 'READY', 'ready'
     DELIVERED = 'DELIVERED', 'delivered'
     CANCELLED = 'CANCELLED', 'cancelled'
+
+
+KITCHEN_STATUSES = (OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY)
+OPEN_ORDER_STATUSES = (OrderStatus.AWAITING_PAYMENT, *KITCHEN_STATUSES)
 
 
 class Order(models.Model):
@@ -30,6 +35,12 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     close = models.BooleanField(default=False)
+    bill = models.ForeignKey(
+        'payments.Bill', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders'
+    )
+    payment = models.ForeignKey(
+        'payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='covered_orders'
+    )
 
     class Meta:
         permissions = [

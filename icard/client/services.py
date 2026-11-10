@@ -6,6 +6,8 @@ from orders.models import Order, OrderStatus
 from orders.services import OrderItem, create_orders
 from tables.models import Table
 
+UNSERVED_GUEST_STATUSES = (OrderStatus.AWAITING_PAYMENT, OrderStatus.PENDING)
+
 
 class ClientOrderLimitError(Exception):
     pass
@@ -19,7 +21,7 @@ def create_client_orders(table: Table, items: list[OrderItem]) -> list[Order]:
     with transaction.atomic():
         locked_table = Table.objects.select_for_update().get(pk=table.pk)
         pending_count = Order.objects.filter(
-            table=locked_table, status=OrderStatus.PENDING, close=False
+            table=locked_table, status__in=UNSERVED_GUEST_STATUSES, close=False
         ).count()
         if pending_count + len(items) > settings.CLIENT_MAX_PENDING_ORDERS_PER_TABLE:
             raise ClientOrderLimitError(

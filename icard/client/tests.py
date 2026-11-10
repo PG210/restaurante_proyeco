@@ -57,7 +57,9 @@ class ClientTableAccessTests(ClientApiTestCase):
     def test_returns_table_state_without_login(self) -> None:
         response = self.client.get(client_url(self.table.token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'number': 5, 'is_open': True, 'bill_requested': False})
+        self.assertEqual(
+            response.data, {'number': 5, 'is_open': True, 'bill_requested': False, 'payment_mode': 'POSTPAID'}
+        )
 
     def test_unknown_token_returns_404(self) -> None:
         response = self.client.get(client_url(uuid.uuid4()))
