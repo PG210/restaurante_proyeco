@@ -32,7 +32,10 @@ from orders.services import (
     advance_orders,
     cancel_order,
     create_orders,
+    delete_order,
+    update_order,
 )
+from products.stock import InsufficientStockError
 from users.api.permissions import HasActionPermission
 
 WRITE_SERIALIZERS = {
@@ -83,8 +86,16 @@ class OrderApiViewSet(ModelViewSet):
         return self._create_from(self.get_serializer(data=request.data))
 
     def update(self, request, *args, **kwargs):
-        super().update(request, *args, **kwargs)
+        order = self.get_object()
+        serializer = self.get_serializer(order, data=request.data, partial=kwargs.get('partial', False))
+        serializer.is_valid(raise_exception=True)
+        quantity = serializer.validated_data.get('quantity', order.quantity)
+        notes = serializer.validated_data.get('notes', order.notes)
+        _run_transition(lambda: update_order(order, quantity, notes, request.user))
         return self._order_response(self.get_object())
+
+    def perform_destroy(self, instance) -> None:
+        delete_order(instance, self.request.user)
 
     @action(detail=True, methods=['post'])
     def advance(self, request, pk=None):
@@ -108,9 +119,12 @@ class OrderApiViewSet(ModelViewSet):
 
     def _create_from(self, serializer) -> Response:
         serializer.is_valid(raise_exception=True)
-        orders = create_orders(
-            serializer.validated_data['table'], serializer.to_order_items(), self.request.user
-        )
+        try:
+            orders = create_orders(
+                serializer.validated_data['table'], serializer.to_order_items(), self.request.user
+            )
+        except InsufficientStockError as error:
+            raise ValidationError({'detail': str(error)}) from error
         created = self.get_queryset().filter(pk__in=[order.pk for order in orders])
         response_data = OrderSerializer(created, many=True).data
         if self.action == 'create':
@@ -135,3 +149,5 @@ def _run_transition(operation) -> None:
         raise ValidationError({'ids': str(error)}) from error
     except OrderPermissionError as error:
         raise PermissionDenied(str(error)) from error
+    except InsufficientStockError as error:
+        raise ValidationError({'detail': str(error)}) from error

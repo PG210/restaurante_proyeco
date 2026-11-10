@@ -12,6 +12,7 @@ from client.api.throttles import (
     ClientTableReadThrottle,
 )
 from client.services import ClientOrderLimitError, create_client_orders, open_orders_for_table
+from products.stock import InsufficientStockError
 from tables.models import Table
 from tables.services import (
     TableClosedError,
@@ -74,6 +75,8 @@ class ClientOrdersView(ClientApiView):
             orders = create_client_orders(table, serializer.to_order_items())
         except ClientOrderLimitError as error:
             raise ValidationError({'items': str(error)}) from error
+        except InsufficientStockError as error:
+            raise ValidationError({'detail': str(error)}) from error
         return Response(ClientOrderSerializer(orders, many=True).data, status=status.HTTP_201_CREATED)
 
 

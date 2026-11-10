@@ -7,6 +7,7 @@ from orders.models import OPEN_ORDER_STATUSES, Order, OrderStatus
 from orders.permissions import CANCEL_ORDER, DELIVER_ORDER, PREPARE_ORDER, qualified_permission
 from payments.services import get_or_create_open_bill, initial_order_status
 from products.models import Product
+from products.stock import adjust_for_quantity_change, release_for_order, reserve_for_orders
 from tables.models import Table
 from users.models import User
 from users.permissions import user_has_permission
@@ -60,7 +61,29 @@ def create_orders(table: Table, items: list[OrderItem], user: User | None) -> li
             )
             for item in items
         ]
-        return Order.objects.bulk_create(orders)
+        created = Order.objects.bulk_create(orders)
+        reserve_for_orders(created, user)
+        return created
+
+
+def update_order(order: Order, quantity: int, notes: str, user: User) -> Order:
+    with transaction.atomic():
+        locked_order = _lock(order)
+        if locked_order.status != OrderStatus.PENDING:
+            raise OrderTransitionError('Solo se pueden modificar pedidos pendientes.')
+        adjust_for_quantity_change(locked_order, quantity, user)
+        locked_order.quantity = quantity
+        locked_order.notes = notes
+        locked_order.save(update_fields=['quantity', 'notes', 'updated_at'])
+        return locked_order
+
+
+def delete_order(order: Order, user: User) -> None:
+    with transaction.atomic():
+        locked_order = _lock(order)
+        if locked_order.status in OPEN_ORDER_STATUSES:
+            release_for_order(locked_order, user)
+        locked_order.delete()
 
 
 def advance_order(order: Order, user: User) -> Order:
@@ -93,6 +116,7 @@ def cancel_order(order: Order, reason: str, user: User) -> Order:
             raise OrderTransitionError('El pedido ya está pagado. Anula su cobro antes de cancelarlo.')
         _ensure_transition_permission(user, OrderStatus.CANCELLED)
         locked_order.cancel_reason = reason
+        release_for_order(locked_order, user)
         return _set_status(locked_order, OrderStatus.CANCELLED, extra_fields=('cancel_reason',))
 
 

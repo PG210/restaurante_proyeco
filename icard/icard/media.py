@@ -81,9 +81,12 @@ class ImageCleanupMixin:
         previous_file = getattr(serializer.instance, self.image_field)
         storage, previous_name = previous_file.storage, previous_file.name
         with transaction.atomic():
-            instance = serializer.save()
+            instance = self.save_update(serializer)
             if previous_name and getattr(instance, self.image_field).name != previous_name:
                 transaction.on_commit(lambda: _delete_file(storage, previous_name))
+
+    def save_update(self, serializer):
+        return serializer.save()
 
     def perform_destroy(self, instance) -> None:
         with transaction.atomic():
