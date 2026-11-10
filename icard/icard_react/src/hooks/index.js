@@ -11,3 +11,5 @@ export * from "./useThrottlePause";
 export * from "./useCart";
 export * from "./useNotifications";
 export * from "./useRolePermissions";
+export * from "./useTableFilters";
+export * from "./useAvailabilityToggle";

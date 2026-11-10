@@ -1,5 +1,6 @@
 import { AdminLayout } from "../layouts";
 import {
+  AvailabilityAdmin,
   BillTicket,
   CategoriesAdmin,
   KitchenAdmin,
@@ -21,6 +22,7 @@ const routesAdmin = [
   { ...ADMIN_SECTIONS.kitchen, layout: AdminLayout, component: KitchenAdmin },
   { ...ADMIN_SECTIONS.paymentsHistory, layout: AdminLayout, component: PaymentsHistory },
   { ...ADMIN_SECTIONS.billTicket, layout: AdminLayout, component: BillTicket },
+  { ...ADMIN_SECTIONS.availability, layout: AdminLayout, component: AvailabilityAdmin },
   { ...ADMIN_SECTIONS.tables, layout: AdminLayout, component: TablesAdmin },
   { ...ADMIN_SECTIONS.tablesQr, layout: AdminLayout, component: TablesQrPrint },
   { ...ADMIN_SECTIONS.categories, layout: AdminLayout, component: CategoriesAdmin },

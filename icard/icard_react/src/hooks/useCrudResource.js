@@ -21,5 +21,10 @@ export function useCrudResource(resourceApi) {
 
   const deleteItem = useCallback((id) => run(() => resourceApi.remove(id)), [resourceApi, run]);
 
-  return { loading, error, items, getItems, addItem, updateItem, deleteItem };
+  const replaceItem = useCallback(
+    (item) => setItems((current) => (current ?? []).map((existing) => (existing.id === item.id ? item : existing))),
+    [],
+  );
+
+  return { loading, error, items, getItems, addItem, updateItem, deleteItem, replaceItem };
 }

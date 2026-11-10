@@ -2,15 +2,19 @@ import React, { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "semantic-ui-react";
 import { AddEditTableForm, HeaderPage, TableQr, TableTablesAdmin } from "../../components/Admin";
-import { ModalBasic } from "../../components/Common";
-import { useFormModal, useTable } from "../../hooks";
+import { ModalBasic, TableFilters } from "../../components/Common";
+import { useFormModal, useTable, useTableFilters } from "../../hooks";
+import { OPEN_OPTIONS, TABLE_FILTERS } from "../../utils/catalogFilters";
 import { ADMIN_SECTIONS } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
+
+const TABLE_SELECTS = [{ name: "open", label: "Estado", options: OPEN_OPTIONS }];
 
 export function TablesAdmin() {
   const navigate = useNavigate();
   const { show, title, content, openModal, closeModal } = useFormModal();
   const { tables, getTables, deleteTable } = useTable();
+  const tableFilters = useTableFilters(tables, TABLE_FILTERS);
 
   const loadTables = useCallback(() => getTables().catch(notifyError), [getTables]);
 
@@ -55,12 +59,15 @@ export function TablesAdmin() {
           Cargando...
         </Loader>
       ) : (
-        <TableTablesAdmin
-          tables={tables}
+        <>
+          <TableFilters state={tableFilters} selects={TABLE_SELECTS} searchPlaceholder="Buscar mesa por número" />
+          <TableTablesAdmin
+            tables={tableFilters.filtered}
           updateTable={updateTable}
           onDeleteTable={onDeleteTable}
-          onShowQr={showQr}
-        />
+            onShowQr={showQr}
+          />
+        </>
       )}
 
       <ModalBasic show={show} onClose={closeModal} title={title}>

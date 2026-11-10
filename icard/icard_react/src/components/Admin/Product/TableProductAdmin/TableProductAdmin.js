@@ -1,9 +1,9 @@
 import React from "react";
-import { Button, Icon, Image, Table } from "semantic-ui-react";
+import { Button, Checkbox, Icon, Image, Table } from "semantic-ui-react";
 import "./TableProductAdmin.scss";
 import { EMPTY_VALUE } from "../../../../utils/constants";
 
-export function TableProductAdmin({ products, updateProduct, onDeleteProduct }) {
+export function TableProductAdmin({ products, updateProduct, onDeleteProduct, onToggleAvailability, togglingId }) {
   return (
     <Table className="table-product-admin">
       <Table.Header>
@@ -12,7 +12,9 @@ export function TableProductAdmin({ products, updateProduct, onDeleteProduct }) 
           <Table.HeaderCell>Producto</Table.HeaderCell>
           <Table.HeaderCell>Precio</Table.HeaderCell>
           <Table.HeaderCell>Categoria</Table.HeaderCell>
-          <Table.HeaderCell>Activo</Table.HeaderCell>
+          <Table.HeaderCell>En la carta</Table.HeaderCell>
+          <Table.HeaderCell>Disponible hoy</Table.HeaderCell>
+          <Table.HeaderCell>Orden</Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -28,6 +30,16 @@ export function TableProductAdmin({ products, updateProduct, onDeleteProduct }) 
             <Table.Cell className="status">
               <Icon name={product.active ? "check" : "close"} />
             </Table.Cell>
+            <Table.Cell>
+              <Checkbox
+                toggle
+                aria-label={`Disponible hoy: ${product.title}`}
+                checked={product.is_available}
+                disabled={togglingId === product.id}
+                onChange={(_, data) => onToggleAvailability(product, data.checked)}
+              />
+            </Table.Cell>
+            <Table.Cell>{product.position}</Table.Cell>
             <Actions product={product} updateProduct={updateProduct} onDeleteProduct={onDeleteProduct} />
           </Table.Row>
         ))}

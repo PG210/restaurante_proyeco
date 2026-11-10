@@ -76,9 +76,21 @@ function extractErrorMessage(data) {
   if (!data) return DEFAULT_ERROR_MESSAGE;
   if (data.detail) return data.detail;
   const [firstField] = Object.keys(data);
+  if (!firstField) return DEFAULT_ERROR_MESSAGE;
   const fieldErrors = data[firstField];
   const firstError = Array.isArray(fieldErrors) ? fieldErrors[0] : fieldErrors;
-  return firstField ? `${firstField}: ${firstError}` : DEFAULT_ERROR_MESSAGE;
+  if (typeof firstError === "string") return `${firstField}: ${firstError}`;
+  return firstErrorText(fieldErrors) ?? DEFAULT_ERROR_MESSAGE;
+}
+
+function firstErrorText(value) {
+  if (typeof value === "string") return value;
+  const entries = Array.isArray(value) ? value : Object.values(value ?? {});
+  for (const entry of entries) {
+    const text = firstErrorText(entry);
+    if (text) return text;
+  }
+  return null;
 }
 
 async function requestNewAccessToken() {

@@ -40,6 +40,13 @@ export const ADMIN_SECTIONS = {
     requiredPermissions: [PERMISSIONS.CHARGE_BILL, PERMISSIONS.VIEW_PAYMENTS],
     inMenu: false,
   },
+  availability: {
+    path: "/admin/availability",
+    label: "Disponibilidad",
+    icon: "clipboard check",
+    adminOnly: false,
+    requiredPermissions: [PERMISSIONS.SET_PRODUCT_AVAILABILITY],
+  },
   tables: { path: "/admin/tables", label: "Mesas", icon: "table", adminOnly: true },
   tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },
   categories: { path: "/admin/categories", label: "Categorías", icon: "folder", adminOnly: true },

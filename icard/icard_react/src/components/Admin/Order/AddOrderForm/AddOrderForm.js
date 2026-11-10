@@ -112,11 +112,21 @@ export function AddOrderForm({ tableId, onClose, onRefetch }) {
   );
 }
 
-function toProductOptions(products) {
+export function isOrderable(product) {
+  return product.active && product.is_available !== false && product.category_data?.active !== false;
+}
+
+function unavailableReason(product) {
+  if (product.is_available === false) return " (agotado hoy)";
+  return isOrderable(product) ? "" : " (categoría oculta)";
+}
+
+export function toProductOptions(products) {
   return (products || []).map((product) => ({
     key: product.id,
-    text: `${product.title} — $${product.price}`,
+    text: `${product.title} — $${product.price}${unavailableReason(product)}`,
     value: product.id,
+    disabled: !isOrderable(product),
   }));
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Button, Header, Icon, Item, Loader, Message } from "semantic-ui-react";
+import { Button, Header, Icon, Item, Label, Loader, Message } from "semantic-ui-react";
 import { customerApi } from "../../api/customer";
 import { useCustomer } from "../../context/CustomerContext";
 import { formatPrice } from "../../utils/cart";
@@ -40,7 +40,7 @@ export function CustomerCategory() {
   );
 }
 
-function ProductList({ products, onAdd }) {
+export function ProductList({ products, onAdd }) {
   if (products === null) {
     return (
       <Loader active inline="centered">
@@ -58,10 +58,17 @@ function ProductList({ products, onAdd }) {
           <Item.Content verticalAlign="middle">
             <Item.Header>{product.title}</Item.Header>
             <Item.Meta>{formatPrice(product.price)}</Item.Meta>
+            {product.description && <Item.Description>{product.description}</Item.Description>}
             <Item.Extra>
-              <Button primary size="small" floated="right" onClick={() => onAdd(product)}>
-                <Icon name="plus" /> Añadir
-              </Button>
+              {product.is_available !== false ? (
+                <Button primary size="small" floated="right" onClick={() => onAdd(product)}>
+                  <Icon name="plus" /> Añadir
+                </Button>
+              ) : (
+                <Label color="grey" className="right floated">
+                  Agotado
+                </Label>
+              )}
             </Item.Extra>
           </Item.Content>
         </Item>

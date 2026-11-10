@@ -13,6 +13,8 @@ const ACCEPTED_IMAGES = {
 };
 const PRICE_DECIMAL_PLACES = 2;
 const PRICE_DECIMALS_MESSAGE = `El precio admite hasta ${PRICE_DECIMAL_PLACES} decimales`;
+const DESCRIPTION_MAX_LENGTH = 500;
+const POSITION_MESSAGE = "El orden es un número entero desde 0";
 
 export function AddEditProductForm({ onClose, onRefetch, product }) {
   const { categories, getCategories } = useCategory();
@@ -63,6 +65,17 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
         error={formik.errors.title}
       />
 
+      <Form.TextArea
+        id="product-description"
+        name="description"
+        label="Descripción"
+        placeholder="Ingredientes y presentación"
+        maxLength={DESCRIPTION_MAX_LENGTH}
+        value={formik.values.description}
+        onChange={formik.handleChange}
+        error={formik.errors.description}
+      />
+
       <Form.Input
         type="number"
         step="0.01"
@@ -85,13 +98,25 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
         onChange={(_, data) => formik.setFieldValue("category", data.value)}
       />
 
+      <Form.Input
+        id="product-position"
+        type="number"
+        min="0"
+        step="1"
+        name="position"
+        label="Orden en la carta"
+        value={formik.values.position}
+        onChange={formik.handleChange}
+        error={formik.errors.position}
+      />
+
       <div className="add-edit-product-form__active">
         <Checkbox
           toggle
           checked={formik.values.active}
           onChange={(_, data) => formik.setFieldValue("active", data.checked)}
         />
-        <span>Activo</span>
+        <span>Mostrar en la carta</span>
       </div>
 
       <Button type="button" fluid {...getRootProps()} color={formik.errors.image && "red"}>
@@ -122,10 +147,12 @@ function toDropdownOptions(categories) {
 function initialValues(product) {
   return {
     title: product?.title || "",
+    description: product?.description || "",
     price: product?.price || "",
+    position: product?.position ?? 0,
     category: product?.category_data?.id ?? "",
     active: Boolean(product?.active),
-    image: "",
+    image: null,
   };
 }
 
@@ -138,9 +165,11 @@ function hasAllowedDecimals(value) {
 function productSchema(isUpdate) {
   return {
     title: Yup.string().required(true),
+    description: Yup.string().max(DESCRIPTION_MAX_LENGTH),
+    position: Yup.number().typeError(POSITION_MESSAGE).integer(POSITION_MESSAGE).min(0, POSITION_MESSAGE).required(POSITION_MESSAGE),
     price: Yup.number().required(true).positive(true).test("decimals", PRICE_DECIMALS_MESSAGE, hasAllowedDecimals),
     category: Yup.number().required(true),
     active: Yup.boolean().required(true),
-    image: isUpdate ? Yup.mixed() : Yup.mixed().required("La imagen es obligatoria"),
+    image: isUpdate ? Yup.mixed().nullable() : Yup.mixed().required("La imagen es obligatoria"),
   };
 }

@@ -33,6 +33,16 @@ describe("admin sections", () => {
     expect(visiblePaths(COOK_USER)).toEqual([ADMIN_SECTIONS.orders.path, ADMIN_SECTIONS.kitchen.path]);
   });
 
+  it("shows availability to a cook who can mark products sold out", () => {
+    const cook = { ...COOK_USER, permissions: [...COOK_USER.permissions, PERMISSIONS.SET_PRODUCT_AVAILABILITY] };
+
+    expect(visiblePaths(cook)).toEqual([
+      ADMIN_SECTIONS.orders.path,
+      ADMIN_SECTIONS.kitchen.path,
+      ADMIN_SECTIONS.availability.path,
+    ]);
+  });
+
   it("shows nothing to a user without permissions", () => {
     expect(visiblePaths(USER_WITHOUT_ROLE)).toEqual([]);
   });

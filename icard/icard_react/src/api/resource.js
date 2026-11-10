@@ -1,13 +1,17 @@
 import { apiRequest } from "./client";
 
+function isMissing(value) {
+  return value === undefined || value === null;
+}
+
 function hasValue(value) {
-  return value !== undefined && value !== null && value !== "";
+  return !isMissing(value) && value !== "";
 }
 
 export function toFormData(data) {
   const formData = new FormData();
   Object.entries(data)
-    .filter(([, value]) => hasValue(value))
+    .filter(([, value]) => !isMissing(value))
     .forEach(([field, value]) => formData.append(field, value));
   return formData;
 }

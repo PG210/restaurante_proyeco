@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect } from "react";
 import { Loader } from "semantic-ui-react";
 import { AddEditCategoryForm, HeaderPage, TableCategoryAdmin } from "../../components/Admin";
-import { ModalBasic } from "../../components/Common";
-import { useCategory, useFormModal } from "../../hooks";
+import { ModalBasic, TableFilters } from "../../components/Common";
+import { useCategory, useFormModal, useTableFilters } from "../../hooks";
+import { CATEGORY_FILTERS, VISIBLE_OPTIONS } from "../../utils/catalogFilters";
 import { notifyError } from "../../utils/notify";
+
+const CATEGORY_SELECTS = [{ name: "active", label: "En la carta", options: VISIBLE_OPTIONS }];
 
 export function CategoriesAdmin() {
   const { show, title, content, openModal, closeModal } = useFormModal();
-  const { loading, categories, getCategories, deleteCategory } = useCategory();
+  const { categories, getCategories, deleteCategory } = useCategory();
+  const categoryFilters = useTableFilters(categories, CATEGORY_FILTERS);
 
   const loadCategories = useCallback(() => getCategories().catch(notifyError), [getCategories]);
 
@@ -40,16 +44,19 @@ export function CategoriesAdmin() {
     <>
       <HeaderPage title="Categorías" btnTitle="Nueva Categoría" btnClick={addCategory} />
 
-      {loading ? (
+      {categories === null ? (
         <Loader active inline="centered">
           Cargando ...
         </Loader>
       ) : (
-        <TableCategoryAdmin
-          categories={categories}
-          updateCategory={updateCategory}
-          onDeleteCategory={onDeleteCategory}
-        />
+        <>
+          <TableFilters state={categoryFilters} selects={CATEGORY_SELECTS} searchPlaceholder="Buscar categoría" />
+          <TableCategoryAdmin
+            categories={categoryFilters.filtered}
+            updateCategory={updateCategory}
+            onDeleteCategory={onDeleteCategory}
+          />
+        </>
       )}
 
       <ModalBasic show={show} onClose={closeModal} title={title}>

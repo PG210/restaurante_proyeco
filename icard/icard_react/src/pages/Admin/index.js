@@ -11,3 +11,4 @@ export * from "./PermissionsAdmin";
 export * from "./BillTicket";
 export * from "./PaymentsHistory";
 export * from "./SettingsAdmin";
+export * from "./AvailabilityAdmin";

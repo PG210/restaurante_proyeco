@@ -2,7 +2,8 @@ import { productApi } from "../api/product";
 import { useCrudResource } from "./useCrudResource";
 
 export function useProduct() {
-  const { loading, error, items, getItems, addItem, updateItem, deleteItem } = useCrudResource(productApi);
+  const { loading, error, items, getItems, addItem, updateItem, deleteItem, replaceItem } =
+    useCrudResource(productApi);
 
   return {
     loading,
@@ -12,5 +13,6 @@ export function useProduct() {
     addProduct: addItem,
     updateProduct: updateItem,
     deleteProduct: deleteItem,
+    replaceProduct: replaceItem,
   };
 }

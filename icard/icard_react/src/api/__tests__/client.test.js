@@ -134,6 +134,17 @@ describe("apiRequest", () => {
     );
   });
 
+  it("finds the message of a nested validation error", async () => {
+    setTokens({ access: "access-1", refresh: "refresh-1" });
+    global.fetch.mockResolvedValueOnce(
+      mockResponse(400, { items: [{}, { product: ["El producto no está disponible."] }] }),
+    );
+
+    await expect(apiRequest("/api/orders/bulk/", { method: "POST", body: {} })).rejects.toThrow(
+      /^El producto no está disponible\.$/,
+    );
+  });
+
   it("exposes Retry-After and a friendly message when the API throttles the request", async () => {
     global.fetch.mockResolvedValueOnce({
       ...mockResponse(429, { detail: "Request was throttled." }),

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Icon, Image, Table } from "semantic-ui-react";
+import { Button, Icon, Image, Label, Table } from "semantic-ui-react";
 import "./TableCategoryAdmin.scss";
 
 export function TableCategoryAdmin({ categories, updateCategory, onDeleteCategory }) {
@@ -9,6 +9,8 @@ export function TableCategoryAdmin({ categories, updateCategory, onDeleteCategor
         <Table.Row>
           <Table.HeaderCell>Imagen</Table.HeaderCell>
           <Table.HeaderCell>Categoria</Table.HeaderCell>
+          <Table.HeaderCell>En la carta</Table.HeaderCell>
+          <Table.HeaderCell>Orden</Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -19,6 +21,12 @@ export function TableCategoryAdmin({ categories, updateCategory, onDeleteCategor
               <Image src={category.image} />
             </Table.Cell>
             <Table.Cell width={2}>{category.title}</Table.Cell>
+            <Table.Cell>
+              <Label size="small" color={category.active ? "green" : "grey"} basic={!category.active}>
+                {category.active ? "Visible" : "Oculta"}
+              </Label>
+            </Table.Cell>
+            <Table.Cell>{category.position}</Table.Cell>
             <Actions category={category} updateCategory={updateCategory} onDeleteCategory={onDeleteCategory} />
           </Table.Row>
         ))}
