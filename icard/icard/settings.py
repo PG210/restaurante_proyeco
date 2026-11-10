@@ -8,6 +8,7 @@ entorno; ver icard/.env.example.
 import datetime
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 from icard.env import env_bool, env_int, env_list, env_str, require_env
@@ -131,6 +132,11 @@ if REDIS_URL:
 CLIENT_MAX_ITEMS_PER_ORDER = env_int('CLIENT_MAX_ITEMS_PER_ORDER', default=20)
 CLIENT_MAX_QUANTITY_PER_ITEM = env_int('CLIENT_MAX_QUANTITY_PER_ITEM', default=20)
 CLIENT_MAX_PENDING_ORDERS_PER_TABLE = env_int('CLIENT_MAX_PENDING_ORDERS_PER_TABLE', default=50)
+
+BUSINESS_TIME_ZONE = env_str('BUSINESS_TIME_ZONE', default='America/Bogota')
+BUSINESS_DAY_START_HOUR = env_int('BUSINESS_DAY_START_HOUR', default=5)
+if not 0 <= BUSINESS_DAY_START_HOUR <= 23:
+    raise ImproperlyConfigured('BUSINESS_DAY_START_HOUR debe estar entre 0 y 23.')
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=env_int('JWT_ACCESS_MINUTES', default=60)),

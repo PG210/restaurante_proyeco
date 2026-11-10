@@ -5,4 +5,6 @@ from categories.models import Category
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'active', 'position')
+    list_filter = ('active',)
+    search_fields = ('title',)

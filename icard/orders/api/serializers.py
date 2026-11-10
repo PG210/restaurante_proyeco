@@ -8,6 +8,7 @@ from tables.api.serializers import TableSerializer
 from tables.models import Table
 
 MAX_BULK_ADVANCE_ORDERS = 100
+PRODUCT_NOT_ORDERABLE_MESSAGE = 'El producto no está disponible.'
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -43,8 +44,8 @@ class OrderItemSerializer(serializers.Serializer):
     notes = serializers.CharField(max_length=ORDER_TEXT_MAX_LENGTH, allow_blank=True, default='')
 
     def validate_product(self, product: Product) -> Product:
-        if not product.active:
-            raise serializers.ValidationError('El producto no está disponible.')
+        if not Product.objects.orderable().filter(pk=product.pk).exists():
+            raise serializers.ValidationError(PRODUCT_NOT_ORDERABLE_MESSAGE)
         return product
 
 

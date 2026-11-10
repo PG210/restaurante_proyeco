@@ -3,7 +3,8 @@ from django.contrib import admin
 from products.models import Product
 
 
-# Register your models here.
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'category', 'price', 'active', 'sold_out_on', 'position')
+    list_filter = ('active', 'category')
+    search_fields = ('title',)
