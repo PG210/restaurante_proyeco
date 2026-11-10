@@ -27,6 +27,8 @@ python manage.py migrate
 python manage.py seed_roles               # crea los roles mesero, cocina y caja con sus permisos
 python manage.py generate_table_tokens    # código QR para las mesas creadas antes de tener QR
 python manage.py assign_orders_to_bills   # cuenta para los pedidos abiertos creados antes de la fase de cobro
+python manage.py delete_orphan_uploads --dry-run   # imágenes que ya no usa ningún producto ni categoría
+python manage.py optimize_uploads --dry-run        # imágenes subidas antes que se pueden reducir
 python manage.py createsuperuser          # el login del panel usa el email
 python manage.py runserver                # http://127.0.0.1:8000
 ```
@@ -52,6 +54,8 @@ En PowerShell, el entorno se activa con `.\envs\icard\Scripts\Activate.ps1`.
 | `CLIENT_MAX_ITEMS_PER_ORDER`, `CLIENT_MAX_QUANTITY_PER_ITEM`, `CLIENT_MAX_PENDING_ORDERS_PER_TABLE` | No | `20`, `20`, `50` |
 | `REDIS_URL` | En producción | Vacía (memoria local por proceso) |
 | `NUM_PROXIES` | No | `0` (número de proxies delante de la app) |
+| `BUSINESS_TIME_ZONE` | No | `America/Bogota` (zona del día de servicio) |
+| `BUSINESS_DAY_START_HOUR` | No | `5` (hora en que empieza el día de servicio, de 0 a 23) |
 
 En producción, configura `REDIS_URL`. Sin una caché compartida, cada proceso lleva su propio contador y los límites de peticiones reales se multiplican por el número de procesos. Detrás de Nginx u otro proxy, ajusta `NUM_PROXIES` para que la IP del cliente no se pueda falsificar.
 
@@ -85,6 +89,15 @@ En **Configuración** (solo administradores):
 - **Momento de cobro:** **al final** (por defecto) o **anticipado**. En anticipado, los pedidos llegan a cocina solo después de cobrarlos en caja. Solo se puede cambiar cuando no hay cuentas abiertas.
 
 Cada cuenta conserva la configuración que había al abrirse, y cada cambio queda en un historial.
+
+## Catálogo y disponibilidad
+
+- **Productos:** descripción, orden y "En la carta" (si aparece o no en la carta). Las categorías pueden ocultarse de la carta sin borrarlas.
+- **Agotado hoy:** la cocina (o quien tenga el permiso en **Permisos**) marca en **Disponibilidad** lo que se acabó. La carta lo muestra como agotado y no se puede pedir. Vuelve a estar disponible solo al empezar el siguiente día de servicio (por defecto a las 5:00 a. m., hora de Bogotá), o antes con **Reponer todo**.
+- **Imágenes:** al subirlas se reducen a 1200 px como máximo, se recomprimen y se les quitan los metadatos EXIF (pueden incluir la ubicación GPS de la foto). Máximo 5 MB. Al reemplazar o borrar, el archivo anterior se elimina.
+- **Búsqueda:** las tablas de productos, categorías, usuarios y mesas tienen búsqueda (sin distinguir tildes) y filtros.
+
+Antes de `optimize_uploads` sin `--dry-run`, copia la carpeta `icard/uploads`: el comando sobrescribe los archivos. La hora del servidor debe estar sincronizada, porque el día de servicio se calcula con ella.
 
 ## Cobro y cierre de caja
 
