@@ -26,6 +26,7 @@ cd icard
 python manage.py migrate
 python manage.py seed_roles               # crea los roles mesero, cocina y caja con sus permisos
 python manage.py generate_table_tokens    # código QR para las mesas creadas antes de tener QR
+python manage.py assign_orders_to_bills   # cuenta para los pedidos abiertos creados antes de la fase de cobro
 python manage.py createsuperuser          # el login del panel usa el email
 python manage.py runserver                # http://127.0.0.1:8000
 ```
@@ -75,6 +76,24 @@ yarn start                                # http://localhost:3000
 | `REACT_APP_PUBLIC_URL` | URL pública del frontend; es la que llevan los QR de las mesas |
 
 El panel está en <http://localhost:3000/admin>. Inicia sesión con el superusuario y crea al personal en **Usuarios**, asignándole un rol. Lo que puede hacer cada rol se ajusta en **Permisos**.
+
+## Configuración del restaurante
+
+En **Configuración** (solo administradores):
+
+- **Impuestos:** el INC y el IVA tienen cada uno su interruptor y su tarifa, que escribe el administrador. Ninguno viene activado y no pueden estar activos a la vez. El impuesto se considera incluido en el precio de la carta y el ticket lo muestra desglosado. Confirma con tu contador qué aplica a tu restaurante; el ticket no es factura electrónica.
+- **Momento de cobro:** **al final** (por defecto) o **anticipado**. En anticipado, los pedidos llegan a cocina solo después de cobrarlos en caja. Solo se puede cambiar cuando no hay cuentas abiertas.
+
+Cada cuenta conserva la configuración que había al abrirse, y cada cambio queda en un historial.
+
+## Cobro y cierre de caja
+
+1. Cada mesa acumula sus pedidos en una cuenta, que se abre con el primer pedido.
+2. En el detalle de la mesa, **Cobrar** registra uno o varios pagos (efectivo, tarjeta o transferencia) con propina opcional. En efectivo, el formulario calcula el vuelto.
+3. Cuando el saldo llega a cero, y no quedan pedidos sin entregar, la cuenta se cierra, la mesa se libera y se puede imprimir el ticket.
+4. **Historial de pagos** muestra las cuentas pagadas y los totales por método para el cierre de caja.
+
+Los pagos no se editan ni se borran. Un error se corrige con una anulación, solo para staff, mientras la cuenta sigue abierta. Por defecto cobra el rol **caja**; se puede delegar a otros roles en **Permisos**.
 
 ## Carta del cliente (QR)
 
