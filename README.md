@@ -94,6 +94,7 @@ Cada cuenta conserva la configuración que había al abrirse, y cada cambio qued
 
 - **Productos:** descripción, orden y "En la carta" (si aparece o no en la carta). Las categorías pueden ocultarse de la carta sin borrarlas.
 - **Agotado hoy:** la cocina (o quien tenga el permiso en **Permisos**) marca en **Disponibilidad** lo que se acabó. La carta lo muestra como agotado y no se puede pedir. Vuelve a estar disponible solo al empezar el siguiente día de servicio (por defecto a las 5:00 a. m., hora de Bogotá), o antes con **Reponer todo**.
+- **Stock (opcional por producto):** para lo que se cuenta por unidad (bebidas, postres). Se descuenta al crear el pedido, se devuelve al cancelarlo, y en 0 el producto se agota solo. En **Disponibilidad y stock** se suman unidades, se ajustan tras un conteo (con motivo) y se ve el historial y lo vendido hoy. Con un umbral, la campana avisa cuando quedan pocas. Por defecto lo gestiona la cocina (permiso delegable). Los platos preparados, como los almuerzos, se dejan sin control y se agotan con "Agotado hoy".
 - **Imágenes:** al subirlas se reducen a 1200 px como máximo, se recomprimen y se les quitan los metadatos EXIF (pueden incluir la ubicación GPS de la foto). Máximo 5 MB. Al reemplazar o borrar, el archivo anterior se elimina.
 - **Búsqueda:** las tablas de productos, categorías, usuarios y mesas tienen búsqueda (sin distinguir tildes) y filtros.
 
