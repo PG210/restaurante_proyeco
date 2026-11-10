@@ -1,5 +1,6 @@
 export const NOTIFICATION_TYPE = {
   BILL: "bill",
+  PAYMENT: "payment",
   ORDER: "order",
 };
 
@@ -34,6 +35,18 @@ function billNotifications(tablesSummary) {
     }));
 }
 
+function paymentNotifications(tablesSummary) {
+  return (tablesSummary || [])
+    .filter((table) => table.awaiting_payment > 0)
+    .map((table) => ({
+      key: `payment-${table.id}`,
+      type: NOTIFICATION_TYPE.PAYMENT,
+      tableId: table.id,
+      tableNumber: table.number,
+      text: `Mesa ${table.number} tiene ${table.awaiting_payment} ${table.awaiting_payment === 1 ? "pedido" : "pedidos"} por cobrar`,
+    }));
+}
+
 function groupOrdersByTable(orders) {
   return orders.reduce((groups, order) => {
     const current = groups.get(order.table) ?? {
@@ -65,8 +78,12 @@ function orderNotifications(guestOrders, lastSeen) {
     }));
 }
 
-export function buildNotifications(guestOrders, tablesSummary, lastSeen) {
-  return [...billNotifications(tablesSummary), ...orderNotifications(guestOrders, lastSeen)];
+export function buildNotifications(guestOrders, tablesSummary, lastSeen, { includePayments = false } = {}) {
+  return [
+    ...billNotifications(tablesSummary),
+    ...(includePayments ? paymentNotifications(tablesSummary) : []),
+    ...orderNotifications(guestOrders, lastSeen),
+  ];
 }
 
 export function hasOrderNotifications(notifications) {

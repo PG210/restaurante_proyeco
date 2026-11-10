@@ -4,11 +4,11 @@ import { HeaderPage, KitchenBoard } from "../../components/Admin";
 import { useAuth, useOrder, usePolling } from "../../hooks";
 import { KITCHEN_POLL_MS } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
-import { OPEN_ORDER_STATUSES } from "../../utils/orderStatus";
+import { KITCHEN_STATUSES } from "../../utils/orderStatus";
 
 const KITCHEN_FILTERS = {
   close: false,
-  status__in: OPEN_ORDER_STATUSES.join(","),
+  status__in: KITCHEN_STATUSES.join(","),
   ordering: "created_at",
 };
 

@@ -8,3 +8,6 @@ export * from "./ProductAdmin";
 export * from "./TablesAdmin";
 export * from "./TablesQrPrint";
 export * from "./PermissionsAdmin";
+export * from "./BillTicket";
+export * from "./PaymentsHistory";
+export * from "./SettingsAdmin";

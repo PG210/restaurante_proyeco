@@ -28,6 +28,10 @@
     width: 200px;
   }
 
+  &--awaiting {
+    border-color: #fbbd08;
+  }
+
   &--pending {
     border-color: #767676;
   }

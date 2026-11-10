@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Card, Header, Icon } from "semantic-ui-react";
 import "./KitchenBoard.scss";
 import {
-  OPEN_ORDER_STATUSES,
+  KITCHEN_STATUSES,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
   formatWaitingTime,
@@ -12,7 +12,7 @@ import {
 import { OrderActions } from "../OrderActions/OrderActions";
 
 export function groupOrdersByStatus(orders) {
-  return OPEN_ORDER_STATUSES.map((status) => ({
+  return KITCHEN_STATUSES.map((status) => ({
     status,
     orders: (orders || []).filter((order) => order.status === status),
   }));

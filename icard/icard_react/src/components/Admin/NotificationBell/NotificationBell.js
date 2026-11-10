@@ -5,6 +5,7 @@ import { NOTIFICATION_TYPE, hasOrderNotifications } from "../../../utils/notific
 
 const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPE.BILL]: { name: "dollar", color: "red" },
+  [NOTIFICATION_TYPE.PAYMENT]: { name: "money", color: "yellow" },
   [NOTIFICATION_TYPE.ORDER]: { name: "food", color: "orange" },
 };
 

@@ -8,11 +8,16 @@ import { formatPrice } from "../../utils/cart";
 import { CUSTOMER_POLL_MS, EMPTY_VALUE } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
 import { ORDER_STATUS, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "../../utils/orderStatus";
+import { PAYMENT_MODE } from "../../utils/tax";
 
 export function customerOrdersTotal(orders) {
   return orders
     .filter((order) => order.status !== ORDER_STATUS.CANCELLED)
     .reduce((total, order) => total + Number(order.price ?? 0) * order.quantity, 0);
+}
+
+export function hasAwaitingPayment(orders) {
+  return orders.some((order) => order.status === ORDER_STATUS.AWAITING_PAYMENT);
 }
 
 export function CustomerOrders() {
@@ -60,6 +65,9 @@ export function CustomerOrders() {
   return (
     <>
       <Header as="h2">Mis pedidos</Header>
+      {table.payment_mode === PAYMENT_MODE.PREPAID && hasAwaitingPayment(orders) && (
+        <Message warning content="Paga en caja para que preparemos tu pedido." />
+      )}
       {orders.length ? <OrderList orders={orders} /> : <Message info content="Todavía no has pedido nada." />}
 
       <Segment clearing>

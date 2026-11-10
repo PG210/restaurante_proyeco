@@ -6,7 +6,13 @@ export const PERMISSIONS = {
   CANCEL_ORDER: "cancel_order",
   OPEN_TABLE: "open_table",
   ATTEND_BILL_REQUEST: "attend_bill_request",
+  CHARGE_BILL: "charge_bill",
+  VIEW_PAYMENTS: "view_payments",
 };
+
+export function hasAnyPermission(user, permissions) {
+  return permissions.some((permission) => hasPermission(user, permission));
+}
 
 export function hasPermission(user, permission) {
   if (!user) return false;

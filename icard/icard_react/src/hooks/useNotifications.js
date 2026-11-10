@@ -47,7 +47,9 @@ export function useNotifications(user) {
 
   return {
     enabled,
-    notifications: buildNotifications(guestOrders, tablesSummary, lastSeen),
+    notifications: buildNotifications(guestOrders, tablesSummary, lastSeen, {
+      includePayments: hasPermission(user, PERMISSIONS.CHARGE_BILL),
+    }),
     markOrdersAsRead,
   };
 }

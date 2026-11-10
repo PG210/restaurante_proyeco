@@ -1,14 +1,29 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Button, Icon, Loader } from "semantic-ui-react";
+import { billApi } from "../../api/bill";
+import { HTTP_NOT_FOUND } from "../../api/client";
 import { tableApi } from "../../api/table";
-import { AddOrderForm, CancelOrderForm, HeaderPage, OrdersTable, TableControls } from "../../components/Admin";
+import {
+  AddOrderForm,
+  BillPanel,
+  CancelOrderForm,
+  ChargeForm,
+  HeaderPage,
+  OrdersTable,
+  PrepaidChargeForm,
+  ReversePaymentForm,
+  TableControls,
+} from "../../components/Admin";
 import { ModalBasic } from "../../components/Common";
 import { useAuth, useFormModal, useOrder, usePolling } from "../../hooks";
 import { ADMIN_HOME_PATH } from "../../utils/adminSections";
 import { ORDERS_POLL_MS } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
 import { OPEN_ORDER_STATUSES } from "../../utils/orderStatus";
+import { isPrepaidBill } from "../../utils/bill";
+import { BILL_STATUS } from "../../utils/paymentMethods";
 import { PERMISSIONS, hasPermission } from "../../utils/permissions";
 import { closeTableConfirmation } from "../../utils/tableStatus";
 
@@ -19,6 +34,8 @@ export function TableDetailsAdmin() {
   const { orders, getOrders, advanceOrder, advanceOrders } = useOrder();
   const [table, setTable] = useState(null);
   const [tableBusy, setTableBusy] = useState(false);
+  const [bill, setBill] = useState(null);
+  const [paidBillId, setPaidBillId] = useState(null);
 
   const loadOrders = useCallback(
     () =>
@@ -33,10 +50,41 @@ export function TableDetailsAdmin() {
 
   const loadTable = useCallback(() => tableApi.retrieve(tableId).then(setTable).catch(notifyError), [tableId]);
 
+  const loadBill = useCallback(
+    () =>
+      billApi
+        .current(tableId)
+        .then(setBill)
+        .catch((error) => (error.status === HTTP_NOT_FOUND ? setBill(null) : notifyError(error))),
+    [tableId],
+  );
+
   const refresh = useCallback(() => {
     loadTable();
     loadOrders();
-  }, [loadTable, loadOrders]);
+    loadBill();
+  }, [loadTable, loadOrders, loadBill]);
+
+  const onCharged = (updatedBill) => {
+    if (updatedBill.status === BILL_STATUS.PAID) {
+      toast.success(`Cuenta de la mesa ${updatedBill.table_number} pagada.`);
+      setPaidBillId(updatedBill.id);
+      setBill(null);
+      refresh();
+      return;
+    }
+    setBill(updatedBill);
+    loadOrders();
+  };
+
+  const onCharge = () => {
+    const Form = isPrepaidBill(bill) ? PrepaidChargeForm : ChargeForm;
+    openModal(`Cobrar — Mesa ${table?.number ?? ""}`, <Form bill={bill} onClose={closeModal} onCharged={onCharged} />);
+  };
+
+  const onReversePayment = (payment) => {
+    openModal("Anular pago", <ReversePaymentForm payment={payment} onClose={closeModal} onReversed={loadBill} />);
+  };
 
   useEffect(() => {
     refresh();
@@ -132,6 +180,14 @@ export function TableDetailsAdmin() {
           onCancel={onCancel}
         />
       )}
+
+      <BillPanel
+        bill={bill}
+        paidBillId={paidBillId}
+        user={auth.me}
+        onCharge={onCharge}
+        onReverse={onReversePayment}
+      />
 
       <ModalBasic show={show} onClose={closeModal} title={title}>
         {content}

@@ -9,3 +9,4 @@ export * from "./Table";
 export * from "./Order";
 export * from "./Permissions";
 export * from "./NotificationBell";
+export * from "./Bill";

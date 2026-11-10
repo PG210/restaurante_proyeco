@@ -6,6 +6,7 @@ const MINUTES_PER_HOUR = 60;
 const MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR;
 
 export const ORDER_STATUS = {
+  AWAITING_PAYMENT: "AWAITING_PAYMENT",
   PENDING: "PENDING",
   PREPARING: "PREPARING",
   READY: "READY",
@@ -13,9 +14,12 @@ export const ORDER_STATUS = {
   CANCELLED: "CANCELLED",
 };
 
-export const OPEN_ORDER_STATUSES = [ORDER_STATUS.PENDING, ORDER_STATUS.PREPARING, ORDER_STATUS.READY];
+export const KITCHEN_STATUSES = [ORDER_STATUS.PENDING, ORDER_STATUS.PREPARING, ORDER_STATUS.READY];
+
+export const OPEN_ORDER_STATUSES = [ORDER_STATUS.AWAITING_PAYMENT, ...KITCHEN_STATUSES];
 
 export const ORDER_STATUS_LABELS = {
+  [ORDER_STATUS.AWAITING_PAYMENT]: "Por cobrar",
   [ORDER_STATUS.PENDING]: "Pendiente",
   [ORDER_STATUS.PREPARING]: "En preparación",
   [ORDER_STATUS.READY]: "Listo",
@@ -24,6 +28,7 @@ export const ORDER_STATUS_LABELS = {
 };
 
 export const ORDER_STATUS_COLORS = {
+  [ORDER_STATUS.AWAITING_PAYMENT]: "yellow",
   [ORDER_STATUS.PENDING]: "grey",
   [ORDER_STATUS.PREPARING]: "orange",
   [ORDER_STATUS.READY]: "green",
@@ -58,6 +63,7 @@ export const BULK_ADVANCE_LABELS = {
 export const DEFAULT_BULK_ADVANCE_LABEL = "Avanzar seleccionados";
 
 export const TABLE_STATE = {
+  AWAITING_PAYMENT: "awaiting",
   BILL: "bill",
   FREE: "free",
   PENDING: "pending",
@@ -69,6 +75,7 @@ const TABLE_SUMMARY_COUNTERS = [
   { field: "ready", status: ORDER_STATUS.READY, singular: "listo", plural: "listos" },
   { field: "preparing", status: ORDER_STATUS.PREPARING, singular: "en preparación", plural: "en preparación" },
   { field: "pending", status: ORDER_STATUS.PENDING, singular: "pendiente", plural: "pendientes" },
+  { field: "awaiting_payment", status: ORDER_STATUS.AWAITING_PAYMENT, singular: "por cobrar", plural: "por cobrar" },
 ];
 
 export function getNextStatus(status) {
@@ -115,11 +122,12 @@ export function isLate(createdAt, now, limitMinutes = KITCHEN_LATE_MINUTES) {
   return getWaitingMinutes(createdAt, now) >= limitMinutes;
 }
 
-export function getTableState({ pending, preparing, ready, bill_requested: billRequested }) {
+export function getTableState({ pending, preparing, ready, awaiting_payment: awaitingPayment, bill_requested: billRequested }) {
   if (billRequested) return TABLE_STATE.BILL;
   if (ready > 0) return TABLE_STATE.READY;
   if (preparing > 0) return TABLE_STATE.PREPARING;
   if (pending > 0) return TABLE_STATE.PENDING;
+  if (awaitingPayment > 0) return TABLE_STATE.AWAITING_PAYMENT;
   return TABLE_STATE.FREE;
 }
 
