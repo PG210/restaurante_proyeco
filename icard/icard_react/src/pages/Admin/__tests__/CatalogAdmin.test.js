@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { productApi } from "../../../api/product";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AuthContext } from "../../../context/AuthContext";
 import { categoryApi } from "../../../api/category";
 import { AddEditCategoryForm, AddEditProductForm } from "../../../components/Admin";
@@ -44,9 +45,19 @@ const KITCHEN = { is_staff: false, permissions: ["view_order", "set_product_avai
 
 function renderAvailability(user = KITCHEN) {
   return render(
-    <AuthContext.Provider value={{ auth: { me: user } }}>
-      <AvailabilityAdmin />
-    </AuthContext.Provider>,
+    <MemoryRouter>
+      <AuthContext.Provider value={{ auth: { me: user } }}>
+        <AvailabilityAdmin />
+      </AuthContext.Provider>
+    </MemoryRouter>,
+  );
+}
+
+function renderProducts() {
+  return render(
+    <MemoryRouter>
+      <ProductAdmin />
+    </MemoryRouter>,
   );
 }
 
@@ -64,7 +75,7 @@ describe("ProductAdmin", () => {
   });
 
   it("searches products by name ignoring accents", async () => {
-    render(<ProductAdmin />);
+    renderProducts();
 
     fireEvent.change(await screen.findByLabelText("Buscar producto"), { target: { value: "HELADO" } });
 
@@ -73,7 +84,7 @@ describe("ProductAdmin", () => {
   });
 
   it("filters the products sold out today", async () => {
-    render(<ProductAdmin />);
+    renderProducts();
     await screen.findByText("Mostrando 2 de 2");
 
     fireEvent.click(screen.getByText("Agotados"));
@@ -83,7 +94,7 @@ describe("ProductAdmin", () => {
   });
 
   it("offers to clear the filters when nothing matches", async () => {
-    render(<ProductAdmin />);
+    renderProducts();
 
     fireEvent.change(await screen.findByLabelText("Buscar producto"), { target: { value: "pizza" } });
     fireEvent.click(await screen.findByRole("button", { name: "Limpiar filtros" }));
@@ -92,9 +103,24 @@ describe("ProductAdmin", () => {
     expect(screen.getByLabelText("Buscar producto")).toHaveValue("");
   });
 
+  it("opens availability and stock from the products header", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <Routes>
+          <Route path="/admin/products" element={<ProductAdmin />} />
+          <Route path="/admin/availability" element={<p>Página de disponibilidad</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Disponibilidad y stock" }));
+
+    expect(await screen.findByText("Página de disponibilidad")).toBeInTheDocument();
+  });
+
   it("marks a product sold out from the table without reloading", async () => {
     productApi.setAvailability.mockResolvedValue({ ...ICE_CREAM, is_available: false, sold_out_today: true });
-    render(<ProductAdmin />);
+    renderProducts();
 
     fireEvent.click(await screen.findByLabelText("Disponible hoy: Helado"));
 

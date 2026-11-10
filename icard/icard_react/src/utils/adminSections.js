@@ -47,6 +47,7 @@ export const ADMIN_SECTIONS = {
     icon: "clipboard check",
     adminOnly: false,
     requiredPermissions: [PERMISSIONS.SET_PRODUCT_AVAILABILITY, PERMISSIONS.MANAGE_STOCK],
+    inStaffMenu: false,
   },
   tables: { path: "/admin/tables", label: "Mesas", icon: "table", adminOnly: true },
   tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },
@@ -69,6 +70,11 @@ export function canAccessSection(section, user) {
 
 export function getVisibleSections(sections, user) {
   return sections.filter((section) => canAccessSection(section, user));
+}
+
+export function getMenuSections(user) {
+  const visible = getVisibleSections(ADMIN_MENU, user);
+  return user?.is_staff ? visible.filter((section) => section.inStaffMenu !== false) : visible;
 }
 
 function withId(path, id) {

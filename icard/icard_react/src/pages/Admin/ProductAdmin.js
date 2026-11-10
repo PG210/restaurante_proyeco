@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader } from "semantic-ui-react";
 import { AddEditProductForm, HeaderPage, TableProductAdmin } from "../../components/Admin";
 import { ModalBasic, TableFilters } from "../../components/Common";
@@ -9,9 +10,11 @@ import {
   PRODUCT_FILTERS,
   productCategoryOptions,
 } from "../../utils/catalogFilters";
+import { AVAILABILITY_PATH } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
 
 export function ProductAdmin() {
+  const navigate = useNavigate();
   const { show, title, content, openModal, closeModal } = useFormModal();
   const { products, getProducts, deleteProduct, replaceProduct } = useProduct();
   const productFilters = useTableFilters(products, PRODUCT_FILTERS);
@@ -55,7 +58,13 @@ export function ProductAdmin() {
 
   return (
     <>
-      <HeaderPage title="Administración de Productos" btnTitle="Nuevo Producto" btnClick={addProduct} />
+      <HeaderPage
+        title="Administración de Productos"
+        btnTitle="Nuevo Producto"
+        btnClick={addProduct}
+        btnTitleTwo="Disponibilidad y stock"
+        btnClickTwo={() => navigate(AVAILABILITY_PATH)}
+      />
 
       {products === null ? (
         <Loader active inline="centered">

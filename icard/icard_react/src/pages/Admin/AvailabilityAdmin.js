@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button, Checkbox, Icon, Loader, Message, Table } from "semantic-ui-react";
 import { productApi } from "../../api/product";
@@ -12,6 +13,7 @@ import {
   productCategoryOptions,
 } from "../../utils/catalogFilters";
 import { EMPTY_VALUE } from "../../utils/constants";
+import { ADMIN_SECTIONS } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
 import { PERMISSIONS, hasPermission } from "../../utils/permissions";
 import { formatStock } from "../../components/Admin/Product/TableProductAdmin/TableProductAdmin";
@@ -24,6 +26,7 @@ export function restockMessage(restocked) {
 }
 
 export function AvailabilityAdmin() {
+  const navigate = useNavigate();
   const { auth } = useAuth();
   const canToggle = hasPermission(auth?.me, PERMISSIONS.SET_PRODUCT_AVAILABILITY);
   const canManageStock = hasPermission(auth?.me, PERMISSIONS.MANAGE_STOCK);
@@ -86,7 +89,11 @@ export function AvailabilityAdmin() {
 
   return (
     <>
-      <HeaderPage title="Disponibilidad y stock" />
+      <HeaderPage
+        title="Disponibilidad y stock"
+        btnTitleTwo={auth?.me?.is_staff ? "Volver a productos" : undefined}
+        btnClickTwo={() => navigate(ADMIN_SECTIONS.products.path)}
+      />
       <Message info size="small">
         "Agotado hoy" vuelve solo al empezar el siguiente día de servicio (por defecto, a las 5:00 a. m.). Los productos
         con control de stock se agotan solos al llegar a 0 y vuelven al reponer unidades.

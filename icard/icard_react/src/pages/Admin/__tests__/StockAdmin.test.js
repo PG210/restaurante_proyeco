@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { productApi } from "../../../api/product";
+import { MemoryRouter } from "react-router-dom";
 import { AuthContext } from "../../../context/AuthContext";
 import { STOCK_FORM_MODE, StockForm, StockHistory } from "../../../components/Admin";
 import { stockInitialValues, toProductPayload } from "../../../components/Admin/Product/AddEditProductForm/StockFields";
@@ -38,9 +39,11 @@ const AVAILABILITY_ONLY = { is_staff: false, permissions: ["set_product_availabi
 
 function renderAvailability(user) {
   return render(
-    <AuthContext.Provider value={{ auth: { me: user } }}>
-      <AvailabilityAdmin />
-    </AuthContext.Provider>,
+    <MemoryRouter>
+      <AuthContext.Provider value={{ auth: { me: user } }}>
+        <AvailabilityAdmin />
+      </AuthContext.Provider>
+    </MemoryRouter>,
   );
 }
 

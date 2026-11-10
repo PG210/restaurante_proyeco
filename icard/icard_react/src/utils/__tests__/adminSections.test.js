@@ -5,6 +5,7 @@ import {
   ALL_ADMIN_SECTIONS,
   billTicketPath,
   canAccessSection,
+  getMenuSections,
   getVisibleSections,
   tableDetailPath,
 } from "../adminSections";
@@ -41,6 +42,20 @@ describe("admin sections", () => {
       ADMIN_SECTIONS.kitchen.path,
       ADMIN_SECTIONS.availability.path,
     ]);
+  });
+
+  it("leaves availability out of the admin menu because it opens from Products", () => {
+    const staffMenu = getMenuSections(STAFF_USER).map((section) => section.path);
+
+    expect(staffMenu).toContain(ADMIN_SECTIONS.products.path);
+    expect(staffMenu).not.toContain(ADMIN_SECTIONS.availability.path);
+    expect(canAccessSection(ADMIN_SECTIONS.availability, STAFF_USER)).toBe(true);
+  });
+
+  it("keeps availability in the kitchen menu", () => {
+    const cook = { ...COOK_USER, permissions: [...COOK_USER.permissions, PERMISSIONS.MANAGE_STOCK] };
+
+    expect(getMenuSections(cook).map((section) => section.path)).toContain(ADMIN_SECTIONS.availability.path);
   });
 
   it("shows nothing to a user without permissions", () => {
