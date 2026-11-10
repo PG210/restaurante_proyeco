@@ -45,7 +45,7 @@ class OrderItem:
     notes: str
 
 
-def create_orders(table: Table, items: list[OrderItem], user: User) -> list[Order]:
+def create_orders(table: Table, items: list[OrderItem], user: User | None) -> list[Order]:
     orders = [
         Order(
             table=table,

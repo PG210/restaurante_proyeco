@@ -3,10 +3,17 @@ from dataclasses import dataclass
 
 from django.contrib.auth.models import Group, Permission
 from django.db import transaction
+from django.db.models import QuerySet
 
-from orders.permissions import ORDERS_APP_LABEL, qualified_permission
 from users.models import User
-from users.roles import DEFAULT_ROLE_PERMISSIONS, DELEGABLE_PERMISSIONS, PERMISSION_LABELS, STAFF_ROLES
+from users.roles import (
+    DEFAULT_ROLE_PERMISSIONS,
+    DELEGABLE_PERMISSIONS,
+    PERMISSION_APP_LABELS,
+    PERMISSION_LABELS,
+    STAFF_ROLES,
+    qualified_delegable_permission,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +34,12 @@ class RolePermissionChange:
 
 
 def get_delegable_permissions() -> dict[str, Permission]:
-    permissions = Permission.objects.filter(
-        content_type__app_label=ORDERS_APP_LABEL, codename__in=DELEGABLE_PERMISSIONS
-    )
-    permissions_by_codename = {permission.codename: permission for permission in permissions}
+    permissions = _delegable_permission_queryset(Permission.objects.select_related('content_type'))
+    permissions_by_codename = {
+        permission.codename: permission
+        for permission in permissions
+        if _is_delegable(permission.codename, permission.content_type.app_label)
+    }
     missing = sorted(set(DELEGABLE_PERMISSIONS) - permissions_by_codename.keys())
     if missing:
         raise MissingPermissionsError(
@@ -42,7 +51,11 @@ def get_delegable_permissions() -> dict[str, Permission]:
 def get_user_permissions(user: User) -> list[str]:
     if user.is_staff:
         return list(DELEGABLE_PERMISSIONS)
-    return [codename for codename in DELEGABLE_PERMISSIONS if user.has_perm(qualified_permission(codename))]
+    return [
+        codename
+        for codename in DELEGABLE_PERMISSIONS
+        if user.has_perm(qualified_delegable_permission(codename))
+    ]
 
 
 def get_permission_matrix() -> dict:
@@ -95,12 +108,21 @@ def apply_default_permissions(changes: list[RolePermissionChange]) -> None:
             _apply(groups_by_name[change.role], change)
 
 
-def _delegable_codenames(group: Group) -> set[str]:
-    return set(
-        group.permissions.filter(
-            content_type__app_label=ORDERS_APP_LABEL, codename__in=DELEGABLE_PERMISSIONS
-        ).values_list('codename', flat=True)
+def _delegable_permission_queryset(queryset: QuerySet) -> QuerySet:
+    return queryset.filter(
+        codename__in=DELEGABLE_PERMISSIONS, content_type__app_label__in=set(PERMISSION_APP_LABELS.values())
     )
+
+
+def _is_delegable(codename: str, app_label: str) -> bool:
+    return PERMISSION_APP_LABELS.get(codename) == app_label
+
+
+def _delegable_codenames(group: Group) -> set[str]:
+    granted = _delegable_permission_queryset(group.permissions.all()).values_list(
+        'codename', 'content_type__app_label'
+    )
+    return {codename for codename, app_label in granted if _is_delegable(codename, app_label)}
 
 
 def _diff(group: Group, target: set[str]) -> RolePermissionChange:

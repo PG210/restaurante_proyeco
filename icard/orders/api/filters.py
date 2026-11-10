@@ -14,4 +14,5 @@ class OrderFilter(filters.FilterSet):
             'table': ['exact'],
             'product': ['exact'],
             'close': ['exact'],
+            'created_by': ['isnull'],
         }

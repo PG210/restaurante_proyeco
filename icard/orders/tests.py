@@ -1,8 +1,10 @@
+from datetime import timedelta
 from decimal import Decimal
 from io import StringIO
 
 from django.core.management import call_command
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework import status
 
 from categories.models import Category
@@ -77,6 +79,22 @@ class OrderReadTests(OrderApiTestCase):
         self.client.force_authenticate(self.waiter)
         response = self.client.get(ORDERS_URL, {'status__in': 'PENDING,PREPARING,READY'})
         self.assertEqual([item['status'] for item in response.data], [OrderStatus.READY])
+
+    def test_filter_orders_placed_by_guests(self) -> None:
+        guest_order = self._order()
+        Order.objects.create(table=self.table, product=self.product, created_by=self.waiter)
+        self.client.force_authenticate(self.waiter)
+        response = self.client.get(ORDERS_URL, {'created_by__isnull': 'true'})
+        self.assertEqual([item['id'] for item in response.data], [guest_order.id])
+
+    def test_filter_guest_orders_created_after_a_moment(self) -> None:
+        old_order = self._order()
+        Order.objects.filter(pk=old_order.pk).update(created_at=timezone.now() - timedelta(hours=1))
+        new_order = self._order()
+        since = (timezone.now() - timedelta(minutes=5)).isoformat()
+        self.client.force_authenticate(self.waiter)
+        response = self.client.get(ORDERS_URL, {'created_by__isnull': 'true', 'created_at_after': since})
+        self.assertEqual([item['id'] for item in response.data], [new_order.id])
 
     def test_missing_order_returns_404(self) -> None:
         self.client.force_authenticate(self.waiter)

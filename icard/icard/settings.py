@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'products',
     'tables',
     'orders',
+    'client',
 ]
 
 MIDDLEWARE = [
@@ -107,8 +108,27 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_THROTTLE_RATES': {
         'login': env_str('LOGIN_THROTTLE_RATE', default='5/min'),
+        'anon': env_str('ANON_RATE', default='300/min'),
+        'client_read': env_str('CLIENT_READ_RATE', default='60/min'),
+        'client_order': env_str('CLIENT_ORDER_RATE', default='10/min'),
+        'client_bill': env_str('CLIENT_BILL_RATE', default='3/min'),
+        'client_ip': env_str('CLIENT_IP_RATE', default='300/min'),
     },
+    'NUM_PROXIES': env_int('NUM_PROXIES', default=0),
 }
+
+REDIS_URL = env_str('REDIS_URL', default='')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
+    }
+
+CLIENT_MAX_ITEMS_PER_ORDER = env_int('CLIENT_MAX_ITEMS_PER_ORDER', default=20)
+CLIENT_MAX_QUANTITY_PER_ITEM = env_int('CLIENT_MAX_QUANTITY_PER_ITEM', default=20)
+CLIENT_MAX_PENDING_ORDERS_PER_TABLE = env_int('CLIENT_MAX_PENDING_ORDERS_PER_TABLE', default=50)
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=env_int('JWT_ACCESS_MINUTES', default=60)),
