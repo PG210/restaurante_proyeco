@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { productApi } from "../../../api/product";
+import { AuthContext } from "../../../context/AuthContext";
 import { categoryApi } from "../../../api/category";
 import { AddEditCategoryForm, AddEditProductForm } from "../../../components/Admin";
 import { toProductOptions } from "../../../components/Admin/Order/AddOrderForm/AddOrderForm";
@@ -9,7 +10,16 @@ import { AvailabilityAdmin, RESTOCK_CONFIRMATION, restockMessage } from "../Avai
 import { ProductAdmin } from "../ProductAdmin";
 
 jest.mock("../../../api/product", () => ({
-  productApi: { list: jest.fn(), update: jest.fn(), create: jest.fn(), setAvailability: jest.fn(), restock: jest.fn() },
+  productApi: {
+    list: jest.fn(),
+    update: jest.fn(),
+    create: jest.fn(),
+    setAvailability: jest.fn(),
+    restock: jest.fn(),
+    addStock: jest.fn(),
+    setStock: jest.fn(),
+    stockMovements: jest.fn(),
+  },
 }));
 jest.mock("../../../api/category", () => ({
   categoryApi: { list: jest.fn(), update: jest.fn(), create: jest.fn() },
@@ -24,11 +34,21 @@ const ICE_CREAM = {
   image: "helado.jpg",
   active: true,
   is_available: true,
+  sold_out_today: false,
   position: 0,
   category: 1,
   category_data: DESSERTS,
 };
-const FLAN = { ...ICE_CREAM, id: 11, title: "Flan", description: "", is_available: false };
+const FLAN = { ...ICE_CREAM, id: 11, title: "Flan", description: "", is_available: false, sold_out_today: true };
+const KITCHEN = { is_staff: false, permissions: ["view_order", "set_product_availability", "manage_stock"] };
+
+function renderAvailability(user = KITCHEN) {
+  return render(
+    <AuthContext.Provider value={{ auth: { me: user } }}>
+      <AvailabilityAdmin />
+    </AuthContext.Provider>,
+  );
+}
 
 function rowTitles() {
   return screen
@@ -56,7 +76,7 @@ describe("ProductAdmin", () => {
     render(<ProductAdmin />);
     await screen.findByText("Mostrando 2 de 2");
 
-    fireEvent.click(screen.getByText("Agotados hoy"));
+    fireEvent.click(screen.getByText("Agotados"));
 
     expect(await screen.findByText("Mostrando 1 de 2")).toBeInTheDocument();
     expect(rowTitles()).toEqual(["Flan"]);
@@ -73,7 +93,7 @@ describe("ProductAdmin", () => {
   });
 
   it("marks a product sold out from the table without reloading", async () => {
-    productApi.setAvailability.mockResolvedValue({ ...ICE_CREAM, is_available: false });
+    productApi.setAvailability.mockResolvedValue({ ...ICE_CREAM, is_available: false, sold_out_today: true });
     render(<ProductAdmin />);
 
     fireEvent.click(await screen.findByLabelText("Disponible hoy: Helado"));
@@ -94,8 +114,8 @@ describe("AvailabilityAdmin", () => {
   afterEach(() => window.confirm.mockRestore());
 
   it("lists only active products and marks one sold out", async () => {
-    productApi.setAvailability.mockResolvedValue({ ...ICE_CREAM, is_available: false });
-    render(<AvailabilityAdmin />);
+    productApi.setAvailability.mockResolvedValue({ ...ICE_CREAM, is_available: false, sold_out_today: true });
+    renderAvailability();
 
     fireEvent.click(await screen.findByLabelText("Agotado hoy: Helado"));
 
@@ -105,8 +125,8 @@ describe("AvailabilityAdmin", () => {
   });
 
   it("puts a sold out product back", async () => {
-    productApi.setAvailability.mockResolvedValue({ ...FLAN, is_available: true });
-    render(<AvailabilityAdmin />);
+    productApi.setAvailability.mockResolvedValue({ ...FLAN, is_available: true, sold_out_today: false });
+    renderAvailability();
 
     fireEvent.click(await screen.findByLabelText("Agotado hoy: Flan"));
 
@@ -116,23 +136,23 @@ describe("AvailabilityAdmin", () => {
 
   it("restocks everything after confirming and reloads the list", async () => {
     productApi.restock.mockResolvedValue({ restocked: 1 });
-    render(<AvailabilityAdmin />);
+    renderAvailability();
     await screen.findByLabelText("Agotado hoy: Flan");
 
-    fireEvent.click(screen.getByRole("button", { name: /Reponer todo/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Quitar todos/ }));
 
     expect(window.confirm).toHaveBeenCalledWith(RESTOCK_CONFIRMATION);
     await waitFor(() => expect(productApi.restock).toHaveBeenCalled());
     await waitFor(() => expect(productApi.list).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.getByRole("button", { name: /Reponer todo/ })).not.toHaveClass("loading"));
+    await waitFor(() => expect(screen.getByRole("button", { name: /Quitar todos/ })).not.toHaveClass("loading"));
   });
 
   it("does nothing when the restock is not confirmed", async () => {
     window.confirm.mockReturnValue(false);
-    render(<AvailabilityAdmin />);
+    renderAvailability();
     await screen.findByLabelText("Agotado hoy: Flan");
 
-    fireEvent.click(screen.getByRole("button", { name: /Reponer todo/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Quitar todos/ }));
 
     expect(productApi.restock).not.toHaveBeenCalled();
   });

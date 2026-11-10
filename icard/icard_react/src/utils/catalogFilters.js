@@ -20,6 +20,7 @@ export const AVAILABILITY_FILTERS = {
   predicates: {
     category: byCategory,
     available: (product, value) => matchesBoolean(product.is_available, value),
+    lowStock: (product, value) => matchesBoolean(product.low_stock, value),
   },
 };
 
@@ -57,7 +58,8 @@ export function productCategoryOptions(products) {
     .sort((first, second) => first.text.localeCompare(second.text, "es"));
 }
 
-export const AVAILABLE_OPTIONS = booleanOptions("Disponibles", "Agotados hoy");
+export const AVAILABLE_OPTIONS = booleanOptions("Disponibles", "Agotados");
+export const LOW_STOCK_OPTIONS = booleanOptions("Pocas unidades", "Stock suficiente");
 export const ACTIVE_OPTIONS = booleanOptions("Activos", "Inactivos");
 export const ON_MENU_OPTIONS = booleanOptions("En la carta", "Fuera de la carta");
 export const VISIBLE_OPTIONS = booleanOptions("Visibles", "Ocultas");

@@ -27,7 +27,7 @@ export function TopMenu() {
           <Menu.Item>
             <NotificationBell
               notifications={notifications}
-              onSelect={(notification) => navigate(tableDetailPath(notification.tableId))}
+              onSelect={(notification) => navigate(notification.path ?? tableDetailPath(notification.tableId))}
               onMarkRead={markOrdersAsRead}
             />
           </Menu.Item>

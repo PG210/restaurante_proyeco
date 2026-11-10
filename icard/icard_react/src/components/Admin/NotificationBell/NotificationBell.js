@@ -7,6 +7,7 @@ const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPE.BILL]: { name: "dollar", color: "red" },
   [NOTIFICATION_TYPE.PAYMENT]: { name: "money", color: "yellow" },
   [NOTIFICATION_TYPE.ORDER]: { name: "food", color: "orange" },
+  [NOTIFICATION_TYPE.STOCK]: { name: "box", color: "blue" },
 };
 
 export function NotificationBell({ notifications, onSelect, onMarkRead }) {

@@ -6,6 +6,7 @@ import * as Yup from "yup";
 import "./AddEditProductForm.scss";
 import { useCategory, useProduct } from "../../../../hooks";
 import { notifyError } from "../../../../utils/notify";
+import { StockFields, stockInitialValues, stockSchema, toProductPayload } from "./StockFields";
 
 const ACCEPTED_IMAGES = {
   "image/jpeg": [],
@@ -31,8 +32,9 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
     validateOnChange: false,
     onSubmit: async (formValue) => {
       try {
-        if (product) await updateProduct(product.id, formValue);
-        else await addProduct(formValue);
+        const payload = toProductPayload(formValue, product);
+        if (product) await updateProduct(product.id, payload);
+        else await addProduct(payload);
         onRefetch();
         onClose();
       } catch (error) {
@@ -119,6 +121,8 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
         <span>Mostrar en la carta</span>
       </div>
 
+      <StockFields formik={formik} isUpdate={Boolean(product)} />
+
       <Button type="button" fluid {...getRootProps()} color={formik.errors.image && "red"}>
         {previewImage ? "Cambiar imagen" : "Subir imagen del producto"}
       </Button>
@@ -153,6 +157,7 @@ function initialValues(product) {
     category: product?.category_data?.id ?? "",
     active: Boolean(product?.active),
     image: null,
+    ...stockInitialValues(product),
   };
 }
 
@@ -171,5 +176,6 @@ function productSchema(isUpdate) {
     category: Yup.number().required(true),
     active: Yup.boolean().required(true),
     image: isUpdate ? Yup.mixed().nullable() : Yup.mixed().required("La imagen es obligatoria"),
+    ...stockSchema,
   };
 }

@@ -2,6 +2,7 @@ export const NOTIFICATION_TYPE = {
   BILL: "bill",
   PAYMENT: "payment",
   ORDER: "order",
+  STOCK: "stock",
 };
 
 export function notificationsStorageKey(userId) {
@@ -78,11 +79,26 @@ function orderNotifications(guestOrders, lastSeen) {
     }));
 }
 
-export function buildNotifications(guestOrders, tablesSummary, lastSeen, { includePayments = false } = {}) {
+function stockNotifications(lowStockProducts, path) {
+  return (lowStockProducts || []).map((product) => ({
+    key: `stock-${product.id}`,
+    type: NOTIFICATION_TYPE.STOCK,
+    path,
+    text: `Quedan ${product.stock} de ${product.title}`,
+  }));
+}
+
+export function buildNotifications(
+  guestOrders,
+  tablesSummary,
+  lastSeen,
+  { includePayments = false, lowStockProducts = [], stockPath = null } = {},
+) {
   return [
     ...billNotifications(tablesSummary),
     ...(includePayments ? paymentNotifications(tablesSummary) : []),
     ...orderNotifications(guestOrders, lastSeen),
+    ...stockNotifications(lowStockProducts, stockPath),
   ];
 }
 

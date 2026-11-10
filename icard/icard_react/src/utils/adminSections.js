@@ -1,6 +1,7 @@
 import { PERMISSIONS, hasAnyPermission } from "./permissions";
 
 export const ADMIN_HOME_PATH = "/admin";
+export const AVAILABILITY_PATH = "/admin/availability";
 
 export const ADMIN_SECTIONS = {
   orders: {
@@ -41,11 +42,11 @@ export const ADMIN_SECTIONS = {
     inMenu: false,
   },
   availability: {
-    path: "/admin/availability",
-    label: "Disponibilidad",
+    path: AVAILABILITY_PATH,
+    label: "Disponibilidad y stock",
     icon: "clipboard check",
     adminOnly: false,
-    requiredPermissions: [PERMISSIONS.SET_PRODUCT_AVAILABILITY],
+    requiredPermissions: [PERMISSIONS.SET_PRODUCT_AVAILABILITY, PERMISSIONS.MANAGE_STOCK],
   },
   tables: { path: "/admin/tables", label: "Mesas", icon: "table", adminOnly: true },
   tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },

@@ -9,6 +9,7 @@ export const PERMISSIONS = {
   CHARGE_BILL: "charge_bill",
   VIEW_PAYMENTS: "view_payments",
   SET_PRODUCT_AVAILABILITY: "set_product_availability",
+  MANAGE_STOCK: "manage_stock",
 };
 
 export function hasAnyPermission(user, permissions) {
