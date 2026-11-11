@@ -80,6 +80,7 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
             'allergens_declared',
             'tags',
             'tag_ids',
+            'preparation_time',
             *STOCK_FIELDS,
         ]
         read_only_fields = ['allergens_declared']

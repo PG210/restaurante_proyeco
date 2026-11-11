@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -10,6 +10,8 @@ STOCK_NOTE_MAX_LENGTH = 255
 MODIFIER_NAME_MAX_LENGTH = 100
 MIN_MAX_CHOICES = 1
 LABEL_NAME_MAX_LENGTH = 50
+MIN_PREPARATION_MINUTES = 1
+MAX_PREPARATION_MINUTES = 240
 
 
 class ProductQuerySet(models.QuerySet):
@@ -44,6 +46,11 @@ class Product(models.Model):
     allergens = models.ManyToManyField('products.Allergen', blank=True, related_name='products')
     tags = models.ManyToManyField('products.Tag', blank=True, related_name='products')
     allergens_declared = models.BooleanField(default=False)
+    preparation_time = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(MIN_PREPARATION_MINUTES), MaxValueValidator(MAX_PREPARATION_MINUTES)],
+    )
 
     objects = ProductQuerySet.as_manager()
 

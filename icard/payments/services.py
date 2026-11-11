@@ -181,7 +181,8 @@ def _charge_prepaid(bill: Bill, request: ChargeRequest, user: User) -> None:
             f'El monto debe ser exactamente el total de los pedidos elegidos ({expected}).'
         )
     payment = _record_payment(bill, request, user)
-    orders.update(status=OrderStatus.PENDING, payment=payment, updated_at=timezone.now())
+    now = timezone.now()
+    orders.update(status=OrderStatus.PENDING, payment=payment, kitchen_at=now, updated_at=now)
 
 
 def _record_payment(bill: Bill, request: ChargeRequest, user: User) -> Payment:
@@ -234,7 +235,9 @@ def _release_prepaid_orders(payment: Payment) -> None:
     covered_orders = payment.covered_orders.select_for_update()
     if covered_orders.exclude(status=OrderStatus.PENDING).exists():
         raise PaymentReversalError('La cocina ya empezó algún pedido de este cobro; no se puede anular.')
-    covered_orders.update(status=OrderStatus.AWAITING_PAYMENT, payment=None, updated_at=timezone.now())
+    covered_orders.update(
+        status=OrderStatus.AWAITING_PAYMENT, payment=None, kitchen_at=None, updated_at=timezone.now()
+    )
 
 
 def close_table_checking_bill(table: Table, user: User) -> Table:

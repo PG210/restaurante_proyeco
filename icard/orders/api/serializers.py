@@ -43,6 +43,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'quantity',
             'notes',
             'price',
+            'preparation_minutes',
+            'kitchen_at',
             'created_by',
             'created_by_email',
             'cancel_reason',

@@ -50,15 +50,19 @@ class OrderItem:
 def create_orders(table: Table, items: list[OrderItem], user: User | None) -> list[Order]:
     with transaction.atomic():
         bill = get_or_create_open_bill(table)
+        status = initial_order_status(bill)
+        kitchen_at = timezone.now() if status == OrderStatus.PENDING else None
         orders = [
             Order(
                 table=table,
                 bill=bill,
-                status=initial_order_status(bill),
+                status=status,
                 product=item.product,
                 quantity=item.quantity,
                 notes=item.notes,
                 price=unit_price(item.product, item.modifiers),
+                preparation_minutes=item.product.preparation_time,
+                kitchen_at=kitchen_at,
                 created_by=user,
             )
             for item in items

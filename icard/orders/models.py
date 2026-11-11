@@ -28,6 +28,8 @@ class Order(models.Model):
     )
     notes = models.CharField(max_length=ORDER_TEXT_MAX_LENGTH, blank=True, default='')
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    preparation_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    kitchen_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders'
     )
