@@ -40,7 +40,7 @@ class BillHistoryPagination(PageNumberPagination):
 
 def _bill_queryset():
     payments = Payment.objects.select_related('created_by', 'reversal').order_by('created_at')
-    lines = Order.objects.select_related('product').order_by('created_at')
+    lines = Order.objects.select_related('product').prefetch_related('modifiers').order_by('created_at')
     return Bill.objects.select_related('closed_by').prefetch_related(
         Prefetch('payments', queryset=payments), Prefetch('orders', queryset=lines)
     )

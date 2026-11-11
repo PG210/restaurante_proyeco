@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from products.models import Product, StockMovement
+from products.models import Modifier, ModifierGroup, Product, StockMovement
 
 
 @admin.register(Product)
@@ -23,3 +23,15 @@ class StockMovementAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None) -> bool:
         return False
+
+
+class ModifierInline(admin.TabularInline):
+    model = Modifier
+    extra = 0
+
+
+@admin.register(ModifierGroup)
+class ModifierGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'min_choices', 'max_choices', 'active', 'position')
+    search_fields = ('name',)
+    inlines = [ModifierInline]

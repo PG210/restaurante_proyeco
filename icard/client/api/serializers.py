@@ -2,7 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from configuration.services import get_settings
-from orders.api.serializers import OrderItemSerializer
+from orders.api.serializers import OrderItemSerializer, OrderModifierSerializer
 from orders.models import Order
 from orders.services import OrderItem
 from tables.models import Table
@@ -22,10 +22,21 @@ class ClientTableSerializer(serializers.ModelSerializer):
 
 class ClientOrderSerializer(serializers.ModelSerializer):
     product_title = serializers.CharField(source='product.title', read_only=True, default=None)
+    modifiers = OrderModifierSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'product', 'product_title', 'quantity', 'notes', 'price', 'status', 'created_at']
+        fields = [
+            'id',
+            'product',
+            'product_title',
+            'modifiers',
+            'quantity',
+            'notes',
+            'price',
+            'status',
+            'created_at',
+        ]
         read_only_fields = fields
 
 

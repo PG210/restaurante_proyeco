@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -6,6 +7,8 @@ from products.permissions import MANAGE_STOCK, SET_PRODUCT_AVAILABILITY
 from products.service_day import current_service_day
 
 STOCK_NOTE_MAX_LENGTH = 255
+MODIFIER_NAME_MAX_LENGTH = 100
+MIN_MAX_CHOICES = 1
 
 
 class ProductQuerySet(models.QuerySet):
@@ -36,6 +39,7 @@ class Product(models.Model):
     position = models.PositiveIntegerField(default=0)
     stock = models.PositiveIntegerField(null=True, blank=True)
     low_stock_threshold = models.PositiveIntegerField(null=True, blank=True)
+    modifier_groups = models.ManyToManyField('products.ModifierGroup', blank=True, related_name='products')
 
     objects = ProductQuerySet.as_manager()
 
@@ -114,3 +118,40 @@ class StockMovement(models.Model):
 
     def __str__(self):
         return f'{self.product} {self.change:+d} ({self.get_reason_display()})'
+
+
+class ModifierGroup(models.Model):
+    name = models.CharField(max_length=MODIFIER_NAME_MAX_LENGTH)
+    min_choices = models.PositiveIntegerField(default=0)
+    max_choices = models.PositiveIntegerField(default=1, validators=[MinValueValidator(MIN_MAX_CHOICES)])
+    active = models.BooleanField(default=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'name', 'id')
+        constraints = [
+            models.CheckConstraint(
+                check=Q(max_choices__gte=MIN_MAX_CHOICES) & Q(max_choices__gte=models.F('min_choices')),
+                name='modifier_group_choices_range',
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class Modifier(models.Model):
+    group = models.ForeignKey(ModifierGroup, on_delete=models.CASCADE, related_name='modifiers')
+    name = models.CharField(max_length=MODIFIER_NAME_MAX_LENGTH)
+    price_delta = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    active = models.BooleanField(default=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'name', 'id')
+        constraints = [
+            models.CheckConstraint(check=Q(price_delta__gte=0), name='modifier_price_not_negative'),
+        ]
+
+    def __str__(self):
+        return f'{self.group}: {self.name}'

@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from django.db import transaction
 from django.utils import timezone
 
-from orders.models import OPEN_ORDER_STATUSES, Order, OrderStatus
+from orders.models import OPEN_ORDER_STATUSES, Order, OrderModifier, OrderStatus
 from orders.permissions import CANCEL_ORDER, DELIVER_ORDER, PREPARE_ORDER, qualified_permission
 from payments.services import get_or_create_open_bill, initial_order_status
-from products.models import Product
+from products.models import Modifier, Product
+from products.modifiers import unit_price
 from products.stock import adjust_for_quantity_change, release_for_order, reserve_for_orders
 from tables.models import Table
 from users.models import User
@@ -43,6 +44,7 @@ class OrderItem:
     product: Product
     quantity: int
     notes: str
+    modifiers: tuple[Modifier, ...] = ()
 
 
 def create_orders(table: Table, items: list[OrderItem], user: User | None) -> list[Order]:
@@ -56,12 +58,23 @@ def create_orders(table: Table, items: list[OrderItem], user: User | None) -> li
                 product=item.product,
                 quantity=item.quantity,
                 notes=item.notes,
-                price=item.product.price,
+                price=unit_price(item.product, item.modifiers),
                 created_by=user,
             )
             for item in items
         ]
         created = Order.objects.bulk_create(orders)
+        OrderModifier.objects.bulk_create(
+            OrderModifier(
+                order=order,
+                modifier=modifier,
+                group_name=modifier.group.name,
+                modifier_name=modifier.name,
+                price_delta=modifier.price_delta,
+            )
+            for order, item in zip(created, items, strict=True)
+            for modifier in item.modifiers
+        )
         reserve_for_orders(created, user)
         return created
 

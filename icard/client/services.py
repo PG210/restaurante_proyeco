@@ -14,7 +14,12 @@ class ClientOrderLimitError(Exception):
 
 
 def open_orders_for_table(table: Table) -> QuerySet:
-    return Order.objects.filter(table=table, close=False).select_related('product').order_by('created_at')
+    return (
+        Order.objects.filter(table=table, close=False)
+        .select_related('product')
+        .prefetch_related('modifiers')
+        .order_by('created_at')
+    )
 
 
 def create_client_orders(table: Table, items: list[OrderItem]) -> list[Order]:

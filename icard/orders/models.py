@@ -51,3 +51,19 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.table)
+
+
+class OrderModifier(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='modifiers')
+    modifier = models.ForeignKey(
+        'products.Modifier', on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+    group_name = models.CharField(max_length=ORDER_TEXT_MAX_LENGTH)
+    modifier_name = models.CharField(max_length=ORDER_TEXT_MAX_LENGTH)
+    price_delta = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return f'{self.group_name}: {self.modifier_name}'

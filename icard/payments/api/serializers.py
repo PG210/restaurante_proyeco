@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
+from orders.api.serializers import OrderModifierSerializer
 from orders.models import Order
 from payments.models import (
     MONEY_DECIMAL_PLACES,
@@ -66,12 +67,23 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 class BillLineSerializer(serializers.ModelSerializer):
     product_title = serializers.CharField(source='product.title', read_only=True, default=None)
+    modifiers = OrderModifierSerializer(many=True, read_only=True)
     line_total = serializers.SerializerMethodField()
     is_paid = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ['id', 'product_title', 'quantity', 'price', 'line_total', 'status', 'notes', 'is_paid']
+        fields = [
+            'id',
+            'product_title',
+            'modifiers',
+            'quantity',
+            'price',
+            'line_total',
+            'status',
+            'notes',
+            'is_paid',
+        ]
         read_only_fields = fields
 
     def get_line_total(self, order: Order) -> str | None:
