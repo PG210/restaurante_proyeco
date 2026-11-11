@@ -2,6 +2,7 @@ import { PERMISSIONS, hasAnyPermission } from "./permissions";
 
 export const ADMIN_HOME_PATH = "/admin";
 export const AVAILABILITY_PATH = "/admin/availability";
+export const MODIFIERS_PATH = "/admin/modifiers";
 
 export const ADMIN_SECTIONS = {
   orders: {
@@ -52,8 +53,14 @@ export const ADMIN_SECTIONS = {
   tables: { path: "/admin/tables", label: "Mesas", icon: "table", adminOnly: true },
   tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },
   categories: { path: "/admin/categories", label: "Categorías", icon: "folder", adminOnly: true },
-  products: { path: "/admin/products", label: "Productos", icon: "cart", adminOnly: true },
-  modifiers: { path: "/admin/modifiers", label: "Modificadores", icon: "options", adminOnly: true },
+  products: {
+    path: "/admin/products",
+    label: "Productos",
+    icon: "cart",
+    adminOnly: true,
+    childPaths: [AVAILABILITY_PATH, MODIFIERS_PATH],
+  },
+  modifiers: { path: MODIFIERS_PATH, label: "Modificadores", icon: "options", adminOnly: true, inMenu: false },
   users: { path: "/admin/users", label: "Usuarios", icon: "users", adminOnly: true },
   permissions: { path: "/admin/permissions", label: "Permisos", icon: "lock", adminOnly: true },
   settings: { path: "/admin/settings", label: "Configuración", icon: "settings", adminOnly: true },
@@ -76,6 +83,10 @@ export function getVisibleSections(sections, user) {
 export function getMenuSections(user) {
   const visible = getVisibleSections(ADMIN_MENU, user);
   return user?.is_staff ? visible.filter((section) => section.inStaffMenu !== false) : visible;
+}
+
+export function isSectionActive(section, pathname) {
+  return pathname === section.path || Boolean(section.childPaths?.includes(pathname));
 }
 
 function withId(path, id) {

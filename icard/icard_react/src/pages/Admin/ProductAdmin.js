@@ -10,7 +10,7 @@ import {
   PRODUCT_FILTERS,
   productCategoryOptions,
 } from "../../utils/catalogFilters";
-import { AVAILABILITY_PATH } from "../../utils/adminSections";
+import { AVAILABILITY_PATH, MODIFIERS_PATH } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
 
 export function ProductAdmin() {
@@ -64,6 +64,7 @@ export function ProductAdmin() {
         btnClick={addProduct}
         btnTitleTwo="Disponibilidad y stock"
         btnClickTwo={() => navigate(AVAILABILITY_PATH)}
+        extraButtons={[{ title: "Modificadores", onClick: () => navigate(MODIFIERS_PATH) }]}
       />
 
       {products === null ? (

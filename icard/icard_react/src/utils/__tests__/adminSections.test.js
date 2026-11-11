@@ -7,6 +7,7 @@ import {
   canAccessSection,
   getMenuSections,
   getVisibleSections,
+  isSectionActive,
   tableDetailPath,
 } from "../adminSections";
 import { PERMISSIONS } from "../permissions";
@@ -50,6 +51,23 @@ describe("admin sections", () => {
     expect(staffMenu).toContain(ADMIN_SECTIONS.products.path);
     expect(staffMenu).not.toContain(ADMIN_SECTIONS.availability.path);
     expect(canAccessSection(ADMIN_SECTIONS.availability, STAFF_USER)).toBe(true);
+  });
+
+  it("leaves modifiers out of the menu because they open from Products", () => {
+    const staffMenu = getMenuSections(STAFF_USER).map((section) => section.path);
+
+    expect(staffMenu).not.toContain(ADMIN_SECTIONS.modifiers.path);
+    expect(canAccessSection(ADMIN_SECTIONS.modifiers, STAFF_USER)).toBe(true);
+  });
+
+  it("highlights Products while the admin is in one of its pages", () => {
+    const { products, availability, modifiers, tables } = ADMIN_SECTIONS;
+
+    expect(isSectionActive(products, products.path)).toBe(true);
+    expect(isSectionActive(products, modifiers.path)).toBe(true);
+    expect(isSectionActive(products, availability.path)).toBe(true);
+    expect(isSectionActive(availability, availability.path)).toBe(true);
+    expect(isSectionActive(tables, modifiers.path)).toBe(false);
   });
 
   it("keeps availability in the kitchen menu", () => {

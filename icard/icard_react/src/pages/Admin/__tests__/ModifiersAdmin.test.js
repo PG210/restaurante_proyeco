@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { modifierGroupApi } from "../../../api/modifierGroup";
 import { orderApi } from "../../../api/order";
 import { productApi } from "../../../api/product";
@@ -9,12 +10,19 @@ import { KitchenBoard } from "../../../components/Admin/Order/KitchenBoard/Kitch
 import { NOT_ENOUGH_OPTIONS_MESSAGE } from "../../../components/Admin/Modifier/AddEditModifierGroupForm/AddEditModifierGroupForm";
 import { ORDER_STATUS } from "../../../utils/orderStatus";
 import { ModifiersAdmin, deleteGroupConfirmation } from "../ModifiersAdmin";
+import { ProductAdmin } from "../ProductAdmin";
 
 jest.mock("../../../api/modifierGroup", () => ({
   modifierGroupApi: { list: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn() },
 }));
 jest.mock("../../../api/product", () => ({
-  productApi: { list: jest.fn(), create: jest.fn(), update: jest.fn(), setModifierGroups: jest.fn() },
+  productApi: {
+    list: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    setModifierGroups: jest.fn(),
+  },
 }));
 jest.mock("../../../api/category", () => ({
   categoryApi: { list: jest.fn() },
@@ -62,6 +70,17 @@ const BURGER = {
   modifier_groups: [DONENESS],
 };
 
+function renderModifiers() {
+  return render(
+    <MemoryRouter initialEntries={["/admin/modifiers"]}>
+      <Routes>
+        <Route path="/admin/modifiers" element={<ModifiersAdmin />} />
+        <Route path="/admin/products" element={<ProductAdmin />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe("ModifiersAdmin", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -72,7 +91,7 @@ describe("ModifiersAdmin", () => {
   afterEach(() => window.confirm.mockRestore());
 
   it("lists the groups with their rule, options and products", async () => {
-    render(<ModifiersAdmin />);
+    renderModifiers();
 
     const row = await screen.findByRole("row", { name: /Término/ });
     expect(within(row).getByText("Elige 1")).toBeInTheDocument();
@@ -81,8 +100,19 @@ describe("ModifiersAdmin", () => {
     expect(within(screen.getByRole("row", { name: /Extras/ })).getByText("Queso (+$3.00)")).toBeInTheDocument();
   });
 
+  it("is reached from Products and goes back to it", async () => {
+    productApi.list.mockResolvedValue([BURGER]);
+    renderModifiers();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Volver a productos" }));
+    expect(await screen.findByText("Administración de Productos")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Modificadores" }));
+    expect(await screen.findByRole("row", { name: /Término/ })).toBeInTheDocument();
+  });
+
   it("searches groups by option name", async () => {
-    render(<ModifiersAdmin />);
+    renderModifiers();
 
     fireEvent.change(await screen.findByLabelText("Buscar grupo u opción"), { target: { value: "queso" } });
 
@@ -92,7 +122,7 @@ describe("ModifiersAdmin", () => {
 
   it("deletes a group after warning how many products use it", async () => {
     modifierGroupApi.remove.mockResolvedValue(null);
-    render(<ModifiersAdmin />);
+    renderModifiers();
 
     fireEvent.click(await screen.findByRole("button", { name: "Eliminar Término" }));
 

@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader, Message } from "semantic-ui-react";
 import { AddEditModifierGroupForm, HeaderPage, TableModifierGroupAdmin } from "../../components/Admin";
 import { ModalBasic, TableFilters } from "../../components/Common";
 import { useFormModal, useModifierGroup, useTableFilters } from "../../hooks";
+import { ADMIN_SECTIONS } from "../../utils/adminSections";
 import { ACTIVE_OPTIONS, MODIFIER_GROUP_FILTERS } from "../../utils/catalogFilters";
 import { notifyError } from "../../utils/notify";
 
@@ -14,6 +16,7 @@ export function deleteGroupConfirmation(group) {
 }
 
 export function ModifiersAdmin() {
+  const navigate = useNavigate();
   const { show, title, content, openModal, closeModal } = useFormModal();
   const { modifierGroups, getModifierGroups, deleteModifierGroup } = useModifierGroup();
   const groupFilters = useTableFilters(modifierGroups, MODIFIER_GROUP_FILTERS);
@@ -42,7 +45,13 @@ export function ModifiersAdmin() {
 
   return (
     <>
-      <HeaderPage title="Modificadores" btnTitle="Nuevo grupo" btnClick={() => openForm(undefined)} />
+      <HeaderPage
+        title="Modificadores"
+        btnTitle="Nuevo grupo"
+        btnClick={() => openForm(undefined)}
+        btnTitleTwo="Volver a productos"
+        btnClickTwo={() => navigate(ADMIN_SECTIONS.products.path)}
+      />
       <Message info size="small">
         Crea grupos como "Término de la carne" o "Extras" y asígnalos a los productos desde su formulario. El precio
         de cada opción se suma al del producto.
