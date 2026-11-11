@@ -6,6 +6,13 @@ import * as Yup from "yup";
 import "./AddEditProductForm.scss";
 import { useCategory, useProduct } from "../../../../hooks";
 import { notifyError } from "../../../../utils/notify";
+import { productApi } from "../../../../api/product";
+import {
+  ModifierGroupsField,
+  modifierGroupInitialValues,
+  modifierGroupsChanged,
+  withoutModifierGroups,
+} from "./ModifierGroupsField";
 import { StockFields, stockInitialValues, stockSchema, toProductPayload } from "./StockFields";
 
 const ACCEPTED_IMAGES = {
@@ -32,9 +39,11 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
     validateOnChange: false,
     onSubmit: async (formValue) => {
       try {
-        const payload = toProductPayload(formValue, product);
-        if (product) await updateProduct(product.id, payload);
-        else await addProduct(payload);
+        const payload = toProductPayload(withoutModifierGroups(formValue), product);
+        const saved = product ? await updateProduct(product.id, payload) : await addProduct(payload);
+        if (modifierGroupsChanged(formValue, product)) {
+          await productApi.setModifierGroups(saved?.id ?? product.id, formValue.modifierGroupIds);
+        }
         onRefetch();
         onClose();
       } catch (error) {
@@ -123,6 +132,8 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
 
       <StockFields formik={formik} isUpdate={Boolean(product)} />
 
+      <ModifierGroupsField formik={formik} />
+
       <Button type="button" fluid {...getRootProps()} color={formik.errors.image && "red"}>
         {previewImage ? "Cambiar imagen" : "Subir imagen del producto"}
       </Button>
@@ -158,6 +169,7 @@ function initialValues(product) {
     active: Boolean(product?.active),
     image: null,
     ...stockInitialValues(product),
+    ...modifierGroupInitialValues(product),
   };
 }
 

@@ -7,6 +7,7 @@ import { useCustomer } from "../../context/CustomerContext";
 import { formatPrice, toOrderItems } from "../../utils/cart";
 import { CUSTOMER_MAX_ITEMS, CUSTOMER_MAX_QUANTITY } from "../../utils/constants";
 import { customerPath } from "../../utils/customerPaths";
+import { modifierSummary } from "../../utils/modifiers";
 import { notifyError } from "../../utils/notify";
 
 const NOTES_MAX_LENGTH = 255;
@@ -49,7 +50,7 @@ export function CustomerCart() {
       <Header as="h2">Tu pedido</Header>
       <Item.Group divided unstackable>
         {cart.items.map((item) => (
-          <CartLine key={item.productId} item={item} cart={cart} />
+          <CartLine key={item.key} item={item} cart={cart} />
         ))}
       </Item.Group>
 
@@ -78,6 +79,7 @@ function CartLine({ item, cart }) {
     <Item>
       <Item.Content>
         <Item.Header>{item.title}</Item.Header>
+        {item.modifiers.length > 0 && <Item.Description>{modifierSummary(item.modifiers)}</Item.Description>}
         <Item.Meta>
           {formatPrice(item.price)} × {item.quantity} = {formatPrice(Number(item.price) * item.quantity)}
         </Item.Meta>
@@ -87,17 +89,17 @@ function CartLine({ item, cart }) {
               icon="minus"
               aria-label={`Quitar uno de ${item.title}`}
               disabled={item.quantity <= 1}
-              onClick={() => cart.setQuantity(item.productId, item.quantity - 1)}
+              onClick={() => cart.setQuantity(item.key, item.quantity - 1)}
             />
             <Button.Or text={item.quantity} />
             <Button
               icon="plus"
               aria-label={`Añadir uno de ${item.title}`}
               disabled={item.quantity >= CUSTOMER_MAX_QUANTITY}
-              onClick={() => cart.setQuantity(item.productId, item.quantity + 1)}
+              onClick={() => cart.setQuantity(item.key, item.quantity + 1)}
             />
           </Button.Group>
-          <Button basic negative size="mini" floated="right" onClick={() => cart.remove(item.productId)}>
+          <Button basic negative size="mini" floated="right" onClick={() => cart.remove(item.key)}>
             <Icon name="trash" /> Quitar
           </Button>
         </Item.Description>
@@ -108,7 +110,7 @@ function CartLine({ item, cart }) {
               placeholder="Notas (ej. sin cebolla)"
               maxLength={NOTES_MAX_LENGTH}
               value={item.notes}
-              onChange={(_, data) => cart.setNotes(item.productId, data.value)}
+              onChange={(_, data) => cart.setNotes(item.key, data.value)}
             />
           </Form>
         </Item.Extra>

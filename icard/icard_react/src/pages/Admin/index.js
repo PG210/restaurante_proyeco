@@ -12,3 +12,4 @@ export * from "./BillTicket";
 export * from "./PaymentsHistory";
 export * from "./SettingsAdmin";
 export * from "./AvailabilityAdmin";
+export * from "./ModifiersAdmin";

@@ -10,6 +10,7 @@ import {
   getBulkAdvanceLabel,
 } from "../../../../utils/orderStatus";
 import { OrderActions } from "../OrderActions/OrderActions";
+import { modifierSummary } from "../../../../utils/modifiers";
 
 const SELECT_ALL_ID = "orders-table-select-all";
 
@@ -73,7 +74,10 @@ export function OrdersTable({ orders, user, onAdvance, onBulkAdvance, onCancel }
                   )}
                 </Table.Cell>
               )}
-              <Table.Cell>{order.product_data?.title ?? EMPTY_VALUE}</Table.Cell>
+              <Table.Cell>
+                {order.product_data?.title ?? EMPTY_VALUE}
+                {order.modifiers?.length > 0 && <div className="orders-table__modifiers">{modifierSummary(order.modifiers)}</div>}
+              </Table.Cell>
               <Table.Cell>{order.quantity}</Table.Cell>
               <Table.Cell>{order.notes || EMPTY_VALUE}</Table.Cell>
               <Table.Cell>{order.price ? `$${order.price}` : EMPTY_VALUE}</Table.Cell>

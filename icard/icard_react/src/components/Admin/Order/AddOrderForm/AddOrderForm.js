@@ -3,7 +3,9 @@ import { Button, Form, List } from "semantic-ui-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import "./AddOrderForm.scss";
+import { ModifierPicker } from "../../../Common";
 import { useOrder, useProduct } from "../../../../hooks";
+import { offeredGroups, selectedModifiers, selectionErrors, titleWithModifiers } from "../../../../utils/modifiers";
 import { notifyError } from "../../../../utils/notify";
 
 const MIN_QUANTITY = 1;
@@ -21,20 +23,31 @@ export function AddOrderForm({ tableId, onClose, onRefetch }) {
     getProducts(ACTIVE_PRODUCTS_FILTER).catch(notifyError);
   }, [getProducts]);
 
+  const findProduct = (productId) => (products || []).find((candidate) => candidate.id === productId);
+
   const formik = useFormik({
     initialValues: initialItemValues(),
     validationSchema: Yup.object(itemSchema()),
+    validate: (values) => validateModifiers(findProduct(values.product), values.modifiers),
     validateOnChange: false,
     onSubmit: (formValue, { resetForm }) => {
-      const product = products.find((candidate) => candidate.id === formValue.product);
+      const product = findProduct(formValue.product);
+      const modifiers = selectedModifiers(offeredGroups(product), formValue.modifiers);
       nextItemKey.current += 1;
       setItems((current) => [
         ...current,
-        { ...formValue, key: nextItemKey.current, title: product?.title ?? "" },
+        { ...formValue, key: nextItemKey.current, title: titleWithModifiers(product?.title ?? "", modifiers) },
       ]);
       resetForm();
     },
   });
+
+  const groups = offeredGroups(findProduct(formik.values.product));
+
+  const selectProduct = (productId) => {
+    formik.setFieldValue("product", productId);
+    formik.setFieldValue("modifiers", []);
+  };
 
   const removeItem = (key) => setItems((current) => current.filter((item) => item.key !== key));
 
@@ -63,8 +76,16 @@ export function AddOrderForm({ tableId, onClose, onRefetch }) {
           options={toProductOptions(products)}
           value={formik.values.product}
           error={formik.errors.product}
-          onChange={(_, data) => formik.setFieldValue("product", data.value)}
+          onChange={(_, data) => selectProduct(data.value)}
         />
+        {groups.length > 0 && (
+          <ModifierPicker
+            groups={groups}
+            value={formik.values.modifiers}
+            onChange={(modifiers) => formik.setFieldValue("modifiers", modifiers)}
+            errors={formik.errors.modifiers ?? {}}
+          />
+        )}
         <Form.Group widths="equal">
           <Form.Input
             type="number"
@@ -130,12 +151,17 @@ export function toProductOptions(products) {
   }));
 }
 
-function toOrderItem({ product, quantity, notes }) {
-  return { product, quantity: Number(quantity), notes };
+function toOrderItem({ product, quantity, notes, modifiers }) {
+  return { product, quantity: Number(quantity), notes, modifiers };
 }
 
 function initialItemValues() {
-  return { product: "", quantity: MIN_QUANTITY, notes: "" };
+  return { product: "", quantity: MIN_QUANTITY, notes: "", modifiers: [] };
+}
+
+export function validateModifiers(product, modifierIds) {
+  const errors = selectionErrors(offeredGroups(product), modifierIds);
+  return Object.keys(errors).length ? { modifiers: errors } : {};
 }
 
 function itemSchema() {

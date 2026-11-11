@@ -11,3 +11,4 @@ export * from "./Permissions";
 export * from "./NotificationBell";
 export * from "./Bill";
 export * from "./Stock";
+export * from "./Modifier";

@@ -10,6 +10,7 @@ import {
   isLate,
 } from "../../../../utils/orderStatus";
 import { OrderActions } from "../OrderActions/OrderActions";
+import { modifierSummary } from "../../../../utils/modifiers";
 
 export function groupOrdersByStatus(orders) {
   return KITCHEN_STATUSES.map((status) => ({
@@ -44,6 +45,9 @@ function KitchenOrderCard({ order, user, now, onAdvance }) {
         <Card.Header>
           {order.quantity} × {order.product_data?.title}
         </Card.Header>
+        {order.modifiers?.length > 0 && (
+          <Card.Description className="kitchen-board__modifiers">{modifierSummary(order.modifiers)}</Card.Description>
+        )}
         <Card.Meta>
           Mesa {order.table_data?.number} · {formatWaitingTime(getWaitingMinutes(order.created_at, now))}
         </Card.Meta>

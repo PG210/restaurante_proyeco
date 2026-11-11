@@ -53,6 +53,7 @@ export const ADMIN_SECTIONS = {
   tablesQr: { path: "/admin/tables/qr", label: "Imprimir QR", icon: "qrcode", adminOnly: true, inMenu: false },
   categories: { path: "/admin/categories", label: "Categorías", icon: "folder", adminOnly: true },
   products: { path: "/admin/products", label: "Productos", icon: "cart", adminOnly: true },
+  modifiers: { path: "/admin/modifiers", label: "Modificadores", icon: "options", adminOnly: true },
   users: { path: "/admin/users", label: "Usuarios", icon: "users", adminOnly: true },
   permissions: { path: "/admin/permissions", label: "Permisos", icon: "lock", adminOnly: true },
   settings: { path: "/admin/settings", label: "Configuración", icon: "settings", adminOnly: true },

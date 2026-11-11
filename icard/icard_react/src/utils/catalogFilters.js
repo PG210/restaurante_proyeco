@@ -31,6 +31,13 @@ export const CATEGORY_FILTERS = {
   },
 };
 
+export const MODIFIER_GROUP_FILTERS = {
+  searchFields: ["name", (group) => (group.modifiers ?? []).map((option) => option.name).join(" ")],
+  predicates: {
+    active: (group, value) => matchesBoolean(group.active, value),
+  },
+};
+
 export const USER_FILTERS = {
   searchFields: ["username", "email", "first_name", "last_name"],
   predicates: {

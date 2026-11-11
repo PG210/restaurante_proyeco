@@ -22,6 +22,26 @@ const TOKEN = "3f2b6c1e-0d4a-4f7e-9a1b-2c3d4e5f6a7b";
 const OPEN_TABLE = { number: 5, is_open: true, bill_requested: false };
 const CATEGORY = { id: 1, title: "Postres", image: "postres.jpg" };
 const PRODUCT = { id: 10, title: "Helado", price: "4.50", image: "helado.jpg", category_data: CATEGORY };
+const BURGER = {
+  id: 11,
+  title: "Hamburguesa",
+  price: "20.00",
+  image: "hamburguesa.jpg",
+  category_data: CATEGORY,
+  modifier_groups: [
+    {
+      id: 1,
+      name: "Término",
+      min_choices: 1,
+      max_choices: 1,
+      modifiers: [
+        { id: 21, name: "Medio", price_delta: "0.00" },
+        { id: 22, name: "Bien cocida", price_delta: "0.00" },
+      ],
+    },
+    { id: 2, name: "Extras", min_choices: 0, max_choices: 2, modifiers: [{ id: 30, name: "Queso", price_delta: "3.00" }] },
+  ],
+};
 const PENDING_ORDER = {
   id: 99,
   product: 10,
@@ -96,7 +116,7 @@ describe("customer menu flow", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Enviar pedido" }));
 
     await waitFor(() =>
-      expect(customerApi.createOrders).toHaveBeenCalledWith(TOKEN, [{ product: 10, quantity: 1, notes: "" }]),
+      expect(customerApi.createOrders).toHaveBeenCalledWith(TOKEN, [{ product: 10, quantity: 1, notes: "", modifiers: [] }]),
     );
     expect(await screen.findByText("Mis pedidos")).toBeInTheDocument();
     expect(await screen.findByText("Pendiente")).toBeInTheDocument();
@@ -119,6 +139,30 @@ describe("customer menu flow", () => {
     expect(customerApi.createOrders).toHaveBeenCalled();
     expect(screen.getByText("Tu pedido")).toBeInTheDocument();
     expect(screen.getByText("Helado")).toBeInTheDocument();
+  });
+
+  it("asks for the options of a product before adding it and sends them", async () => {
+    customerApi.getProducts.mockResolvedValue([BURGER]);
+    customerApi.createOrders.mockResolvedValue([]);
+    renderCustomer();
+
+    fireEvent.click(await screen.findByText("Postres"));
+    fireEvent.click(await screen.findByRole("button", { name: /Añadir/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Añadir — \$20.00/ }));
+    expect(await screen.findByText("Elige 1 opción en Término.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Bien cocida"));
+    fireEvent.click(screen.getByLabelText("Queso +$3.00"));
+    fireEvent.click(screen.getByRole("button", { name: /Añadir — \$23.00/ }));
+    fireEvent.click(screen.getByRole("link", { name: /Carrito/ }));
+
+    expect(await screen.findByText("Bien cocida, Queso")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Enviar pedido" }));
+    await waitFor(() =>
+      expect(customerApi.createOrders).toHaveBeenCalledWith(TOKEN, [
+        { product: 11, quantity: 1, notes: "", modifiers: [22, 30] },
+      ]),
+    );
   });
 
   it("lets the guest ask for the bill once", async () => {

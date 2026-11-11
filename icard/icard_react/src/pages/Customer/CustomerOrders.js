@@ -9,6 +9,7 @@ import { CUSTOMER_POLL_MS, EMPTY_VALUE } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
 import { ORDER_STATUS, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "../../utils/orderStatus";
 import { PAYMENT_MODE } from "../../utils/tax";
+import { modifierSummary } from "../../utils/modifiers";
 
 export function customerOrdersTotal(orders) {
   return orders
@@ -99,6 +100,7 @@ function OrderList({ orders }) {
             <Item.Header>
               {order.quantity} × {order.product_title ?? EMPTY_VALUE}
             </Item.Header>
+            {order.modifiers?.length > 0 && <Item.Description>{modifierSummary(order.modifiers)}</Item.Description>}
             <Item.Meta>{order.price ? formatPrice(Number(order.price) * order.quantity) : EMPTY_VALUE}</Item.Meta>
             {order.notes && <Item.Description>{order.notes}</Item.Description>}
             <Item.Extra>

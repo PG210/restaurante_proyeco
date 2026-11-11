@@ -9,6 +9,7 @@ import { notifyError } from "../../utils/notify";
 import { ORDER_STATUS } from "../../utils/orderStatus";
 import { BILL_STATUS } from "../../utils/paymentMethods";
 import { taxLabel } from "../../utils/tax";
+import { modifierSummary } from "../../utils/modifiers";
 
 export function billableLines(lines) {
   return lines.filter((line) => line.status !== ORDER_STATUS.CANCELLED);
@@ -64,6 +65,7 @@ export function BillTicket() {
               <tr key={line.id}>
                 <td>
                   {line.quantity} × {line.product_title}
+                  {line.modifiers?.length > 0 && <small>{modifierSummary(line.modifiers)}</small>}
                   <small>{formatMoney(line.price)} c/u</small>
                 </td>
                 <td>{formatMoney(line.line_total)}</td>

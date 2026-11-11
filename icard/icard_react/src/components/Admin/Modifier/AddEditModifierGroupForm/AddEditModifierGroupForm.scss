@@ -1,0 +1,13 @@
+.add-edit-modifier-group-form {
+  .ui.toggle.checkbox {
+    margin-bottom: 1em;
+  }
+
+  &__option {
+    align-items: center;
+  }
+
+  &__active {
+    padding-top: 0.5em;
+  }
+}

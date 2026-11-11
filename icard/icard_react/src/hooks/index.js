@@ -13,3 +13,4 @@ export * from "./useNotifications";
 export * from "./useRolePermissions";
 export * from "./useTableFilters";
 export * from "./useAvailabilityToggle";
+export * from "./useModifierGroup";

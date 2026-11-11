@@ -4,7 +4,9 @@ import { toast } from "react-toastify";
 import { Button, Header, Icon, Item, Label, Loader, Message } from "semantic-ui-react";
 import { customerApi } from "../../api/customer";
 import { useCustomer } from "../../context/CustomerContext";
+import { ModalBasic, ModifierDialog } from "../../components/Common";
 import { formatPrice } from "../../utils/cart";
+import { hasModifiers } from "../../utils/modifiers";
 import { customerPath } from "../../utils/customerPaths";
 import { notifyError } from "../../utils/notify";
 
@@ -12,6 +14,7 @@ export function CustomerCategory() {
   const { categoryId } = useParams();
   const { token, cart, pauseOnThrottle } = useCustomer();
   const [products, setProducts] = useState(null);
+  const [choosing, setChoosing] = useState(null);
 
   useEffect(() => {
     customerApi
@@ -24,10 +27,13 @@ export function CustomerCategory() {
       });
   }, [categoryId, pauseOnThrottle]);
 
-  const addProduct = (product) => {
-    cart.add(product);
+  const addToCart = (product, modifiers = []) => {
+    cart.add(product, modifiers);
+    setChoosing(null);
     toast.success(`${product.title} añadido al carrito`, { toastId: `added-${product.id}` });
   };
+
+  const addProduct = (product) => (hasModifiers(product) ? setChoosing(product) : addToCart(product));
 
   return (
     <>
@@ -36,6 +42,9 @@ export function CustomerCategory() {
       </Button>
       <Header as="h2">{products?.[0]?.category_data?.title ?? "Productos"}</Header>
       <ProductList products={products} onAdd={addProduct} />
+      <ModalBasic show={choosing !== null} onClose={() => setChoosing(null)} title={choosing?.title}>
+        {choosing && <ModifierDialog product={choosing} onConfirm={(modifiers) => addToCart(choosing, modifiers)} />}
+      </ModalBasic>
     </>
   );
 }

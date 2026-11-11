@@ -12,6 +12,7 @@ import {
   paymentFieldsSchema,
   toPaymentPayload,
 } from "../PaymentFields/PaymentFields";
+import { titleWithModifiers } from "../../../../utils/modifiers";
 
 export function PrepaidChargeForm({ bill, onClose, onCharged }) {
   const payableLines = unpaidLines(bill);
@@ -49,7 +50,7 @@ export function PrepaidChargeForm({ bill, onClose, onCharged }) {
           <List.Item key={line.id}>
             <Checkbox
               id={`prepaid-line-${line.id}`}
-              label={`${line.quantity} × ${line.product_title} — ${formatMoney(line.line_total)}`}
+              label={`${line.quantity} × ${titleWithModifiers(line.product_title, line.modifiers)} — ${formatMoney(line.line_total)}`}
               checked={selectedIds.includes(line.id)}
               onChange={() => toggle(line.id)}
             />

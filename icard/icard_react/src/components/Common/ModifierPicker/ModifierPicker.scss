@@ -1,0 +1,23 @@
+.modifier-picker {
+  &__group {
+    margin-bottom: 1em !important;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.5em !important;
+  }
+
+  &__option {
+    display: block !important;
+    margin: 0.4em 0;
+  }
+
+  &__error {
+    color: #9f3a38;
+    font-size: 0.9em;
+    margin-top: 0.25em;
+  }
+}
