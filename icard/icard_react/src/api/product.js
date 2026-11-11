@@ -11,10 +11,6 @@ export const productApi = {
   addStock: (id, units) => apiRequest(`${PRODUCTS_PATH}${id}/stock/add/`, { method: "POST", body: { units } }),
   setStock: (id, units, note) =>
     apiRequest(`${PRODUCTS_PATH}${id}/stock/set/`, { method: "POST", body: { units, note } }),
-  setModifierGroups: (id, modifierGroupIds) =>
-    apiRequest(`${PRODUCTS_PATH}${id}/modifier-groups/`, {
-      method: "PUT",
-      body: { modifier_group_ids: modifierGroupIds },
-    }),
+  setLabels: (id, labels) => apiRequest(`${PRODUCTS_PATH}${id}/labels/`, { method: "PUT", body: labels }),
   stockMovements: (id, page = 1) => apiRequest(`${PRODUCTS_PATH}${id}/stock-movements/${toQueryString({ page })}`),
 };

@@ -15,6 +15,8 @@ export const customerApi = {
     apiRequest(customerPath(token, "orders"), { ...PUBLIC_REQUEST, method: "POST", body: { items } }),
   requestBill: (token) => apiRequest(customerPath(token, "bill"), { ...PUBLIC_REQUEST, method: "POST" }),
   getCategories: () => apiRequest("/api/categories/", PUBLIC_REQUEST),
+  getAllergens: () => apiRequest("/api/allergens/", PUBLIC_REQUEST),
+  getTags: () => apiRequest("/api/tags/", PUBLIC_REQUEST),
   getProducts: (categoryId) =>
     apiRequest(`/api/products/${toQueryString({ category: categoryId, active: true })}`, PUBLIC_REQUEST),
 };

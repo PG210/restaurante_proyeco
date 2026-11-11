@@ -13,3 +13,4 @@ export * from "./PaymentsHistory";
 export * from "./SettingsAdmin";
 export * from "./AvailabilityAdmin";
 export * from "./ModifiersAdmin";
+export * from "./LabelsAdmin";

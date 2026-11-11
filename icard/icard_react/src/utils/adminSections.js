@@ -3,6 +3,7 @@ import { PERMISSIONS, hasAnyPermission } from "./permissions";
 export const ADMIN_HOME_PATH = "/admin";
 export const AVAILABILITY_PATH = "/admin/availability";
 export const MODIFIERS_PATH = "/admin/modifiers";
+export const LABELS_PATH = "/admin/labels";
 
 export const ADMIN_SECTIONS = {
   orders: {
@@ -58,9 +59,10 @@ export const ADMIN_SECTIONS = {
     label: "Productos",
     icon: "cart",
     adminOnly: true,
-    childPaths: [AVAILABILITY_PATH, MODIFIERS_PATH],
+    childPaths: [AVAILABILITY_PATH, MODIFIERS_PATH, LABELS_PATH],
   },
   modifiers: { path: MODIFIERS_PATH, label: "Modificadores", icon: "options", adminOnly: true, inMenu: false },
+  labels: { path: LABELS_PATH, label: "Alérgenos y etiquetas", icon: "tags", adminOnly: true, inMenu: false },
   users: { path: "/admin/users", label: "Usuarios", icon: "users", adminOnly: true },
   permissions: { path: "/admin/permissions", label: "Permisos", icon: "lock", adminOnly: true },
   settings: { path: "/admin/settings", label: "Configuración", icon: "settings", adminOnly: true },

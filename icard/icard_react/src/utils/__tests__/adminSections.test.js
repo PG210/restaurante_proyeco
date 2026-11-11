@@ -57,15 +57,18 @@ describe("admin sections", () => {
     const staffMenu = getMenuSections(STAFF_USER).map((section) => section.path);
 
     expect(staffMenu).not.toContain(ADMIN_SECTIONS.modifiers.path);
+    expect(staffMenu).not.toContain(ADMIN_SECTIONS.labels.path);
     expect(canAccessSection(ADMIN_SECTIONS.modifiers, STAFF_USER)).toBe(true);
+    expect(canAccessSection(ADMIN_SECTIONS.labels, STAFF_USER)).toBe(true);
   });
 
   it("highlights Products while the admin is in one of its pages", () => {
-    const { products, availability, modifiers, tables } = ADMIN_SECTIONS;
+    const { products, availability, modifiers, labels, tables } = ADMIN_SECTIONS;
 
     expect(isSectionActive(products, products.path)).toBe(true);
     expect(isSectionActive(products, modifiers.path)).toBe(true);
     expect(isSectionActive(products, availability.path)).toBe(true);
+    expect(isSectionActive(products, labels.path)).toBe(true);
     expect(isSectionActive(availability, availability.path)).toBe(true);
     expect(isSectionActive(tables, modifiers.path)).toBe(false);
   });

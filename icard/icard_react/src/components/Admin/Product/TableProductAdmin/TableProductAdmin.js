@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Checkbox, Icon, Image, Table } from "semantic-ui-react";
+import { Button, Checkbox, Icon, Image, Label, Table } from "semantic-ui-react";
 import "./TableProductAdmin.scss";
 import { EMPTY_VALUE } from "../../../../utils/constants";
 
@@ -14,6 +14,7 @@ export function TableProductAdmin({ products, updateProduct, onDeleteProduct, on
           <Table.HeaderCell>Categoria</Table.HeaderCell>
           <Table.HeaderCell>En la carta</Table.HeaderCell>
           <Table.HeaderCell>Disponible hoy</Table.HeaderCell>
+          <Table.HeaderCell>Alérgenos</Table.HeaderCell>
           <Table.HeaderCell>Stock</Table.HeaderCell>
           <Table.HeaderCell>Vendidos hoy</Table.HeaderCell>
           <Table.HeaderCell>Orden</Table.HeaderCell>
@@ -41,6 +42,7 @@ export function TableProductAdmin({ products, updateProduct, onDeleteProduct, on
                 onChange={(_, data) => onToggleAvailability(product, data.checked)}
               />
             </Table.Cell>
+            <Table.Cell>{allergenCell(product)}</Table.Cell>
             <Table.Cell>{formatStock(product.stock)}</Table.Cell>
             <Table.Cell>{product.sold_today ?? EMPTY_VALUE}</Table.Cell>
             <Table.Cell>{product.position}</Table.Cell>
@@ -50,6 +52,14 @@ export function TableProductAdmin({ products, updateProduct, onDeleteProduct, on
       </Table.Body>
     </Table>
   );
+}
+
+export const UNREVIEWED_CELL = "Sin revisar";
+
+export function allergenCell(product) {
+  const names = (product.allergens ?? []).map((allergen) => allergen.name);
+  if (names.length) return names.join(", ");
+  return product.allergens_declared ? "Ninguno" : <Label size="small" color="orange" basic content={UNREVIEWED_CELL} />;
 }
 
 export function formatStock(stock) {

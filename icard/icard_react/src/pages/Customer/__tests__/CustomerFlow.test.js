@@ -5,6 +5,8 @@ import { ApiError } from "../../../api/client";
 import { customerApi } from "../../../api/customer";
 import { CustomerLayout } from "../../../layouts/CustomerLayout";
 import { cartStorageKey } from "../../../utils/cart";
+import { MENU_FILTERS_KEY } from "../../../hooks/useMenuFilters";
+import { ALLERGEN_NOTICE } from "../../../utils/labels";
 import { CustomerApp } from "../CustomerApp";
 
 jest.mock("../../../api/customer", () => ({
@@ -15,6 +17,8 @@ jest.mock("../../../api/customer", () => ({
     requestBill: jest.fn(),
     getCategories: jest.fn(),
     getProducts: jest.fn(),
+    getAllergens: jest.fn(),
+    getTags: jest.fn(),
   },
 }));
 
@@ -69,14 +73,24 @@ function renderCustomer(path = `/client/${TOKEN}`) {
   );
 }
 
+const GLUTEN = { id: 1, name: "Gluten" };
+const DAIRY = { id: 7, name: "Lácteos" };
+const VEGAN = { id: 1, name: "Vegano" };
+const BREAD = { ...PRODUCT, id: 20, title: "Pan", allergens: [GLUTEN], allergens_declared: true, tags: [] };
+const SALAD = { ...PRODUCT, id: 21, title: "Ensalada", allergens: [], allergens_declared: true, tags: [VEGAN] };
+const FLAN = { ...PRODUCT, id: 22, title: "Flan", allergens: [], allergens_declared: false, tags: [] };
+
 describe("customer menu flow", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     jest.clearAllMocks();
     customerApi.getTable.mockResolvedValue(OPEN_TABLE);
     customerApi.getCategories.mockResolvedValue([CATEGORY]);
     customerApi.getProducts.mockResolvedValue([PRODUCT]);
     customerApi.getOrders.mockResolvedValue([]);
+    customerApi.getAllergens.mockResolvedValue([GLUTEN, DAIRY]);
+    customerApi.getTags.mockResolvedValue([VEGAN]);
   });
 
   it("explains that an unknown QR is not valid", async () => {
@@ -175,5 +189,59 @@ describe("customer menu flow", () => {
     expect(await screen.findByText("Ya pediste la cuenta. El personal viene en camino.")).toBeInTheDocument();
     expect(customerApi.requestBill).toHaveBeenCalledWith(TOKEN);
     expect(screen.queryByRole("button", { name: "Pedir la cuenta" })).not.toBeInTheDocument();
+  });
+
+  it("shows the tags and what each product contains", async () => {
+    customerApi.getProducts.mockResolvedValue([BREAD, SALAD, FLAN]);
+    renderCustomer();
+
+    fireEvent.click(await screen.findByText("Postres"));
+
+    expect(await screen.findByText("Contiene: gluten")).toBeInTheDocument();
+    expect(screen.getByText("Vegano")).toBeInTheDocument();
+    expect(screen.getByText("Sin alérgenos declarados")).toBeInTheDocument();
+    expect(screen.getByText("Consulta los alérgenos al personal")).toBeInTheDocument();
+    expect(screen.getByText(ALLERGEN_NOTICE)).toBeInTheDocument();
+  });
+
+  it("hides what contains an allergen and what nobody reviewed, and remembers it", async () => {
+    customerApi.getProducts.mockResolvedValue([BREAD, SALAD, FLAN]);
+    renderCustomer();
+
+    fireEvent.click(await screen.findByText("Postres"));
+    fireEvent.click(await screen.findByRole("button", { name: /Filtros/ }));
+    fireEvent.click(await screen.findByRole("option", { name: "Gluten" }));
+
+    await waitFor(() => expect(screen.queryByText("Pan")).not.toBeInTheDocument());
+    expect(screen.queryByText("Flan")).not.toBeInTheDocument();
+    expect(screen.getByText("Ensalada")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 producto(s) ocultos por los filtros, 1 por no tener información de alérgenos."),
+    ).toBeInTheDocument();
+    expect(JSON.parse(sessionStorage.getItem(MENU_FILTERS_KEY))).toEqual({ allergenIds: [1], tagIds: [] });
+  });
+
+  it("shows only the products with every chosen tag", async () => {
+    sessionStorage.setItem(MENU_FILTERS_KEY, JSON.stringify({ allergenIds: [], tagIds: [VEGAN.id] }));
+    customerApi.getProducts.mockResolvedValue([BREAD, SALAD, FLAN]);
+    renderCustomer();
+
+    fireEvent.click(await screen.findByText("Postres"));
+
+    expect(await screen.findByText("Ensalada")).toBeInTheDocument();
+    expect(screen.queryByText("Pan")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filtros (1)" })).toBeInTheDocument();
+  });
+
+  it("keeps the saved allergen filter when the lists cannot load", async () => {
+    sessionStorage.setItem(MENU_FILTERS_KEY, JSON.stringify({ allergenIds: [GLUTEN.id], tagIds: [] }));
+    customerApi.getAllergens.mockRejectedValue(new Error("offline"));
+    customerApi.getProducts.mockResolvedValue([BREAD, SALAD]);
+    renderCustomer();
+
+    fireEvent.click(await screen.findByText("Postres"));
+
+    expect(await screen.findByText("Ensalada")).toBeInTheDocument();
+    expect(screen.queryByText("Pan")).not.toBeInTheDocument();
   });
 });

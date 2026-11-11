@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { modifierGroupApi } from "../../../api/modifierGroup";
 import { orderApi } from "../../../api/order";
 import { productApi } from "../../../api/product";
+import { allergenApi, tagApi } from "../../../api/productLabel";
 import { categoryApi } from "../../../api/category";
 import { AddEditModifierGroupForm, AddEditProductForm, AddOrderForm } from "../../../components/Admin";
 import { KitchenBoard } from "../../../components/Admin/Order/KitchenBoard/KitchenBoard";
@@ -21,11 +22,15 @@ jest.mock("../../../api/product", () => ({
     create: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
-    setModifierGroups: jest.fn(),
+    setLabels: jest.fn(),
   },
 }));
 jest.mock("../../../api/category", () => ({
   categoryApi: { list: jest.fn() },
+}));
+jest.mock("../../../api/productLabel", () => ({
+  allergenApi: { list: jest.fn() },
+  tagApi: { list: jest.fn() },
 }));
 jest.mock("../../../api/order", () => ({
   orderApi: { createBulk: jest.fn() },
@@ -196,7 +201,9 @@ describe("product form option groups", () => {
     categoryApi.list.mockResolvedValue([CATEGORY]);
     modifierGroupApi.list.mockResolvedValue([DONENESS, EXTRAS]);
     productApi.update.mockResolvedValue(BURGER);
-    productApi.setModifierGroups.mockResolvedValue(BURGER);
+    productApi.setLabels.mockResolvedValue(BURGER);
+    allergenApi.list.mockResolvedValue([]);
+    tagApi.list.mockResolvedValue([]);
   });
 
   it("does not resend the groups when they did not change", async () => {
@@ -207,7 +214,7 @@ describe("product form option groups", () => {
 
     await waitFor(() => expect(productApi.update).toHaveBeenCalled());
     expect(productApi.update.mock.calls[0][1]).not.toHaveProperty("modifierGroupIds");
-    expect(productApi.setModifierGroups).not.toHaveBeenCalled();
+    expect(productApi.setLabels).not.toHaveBeenCalled();
   });
 
   it("saves the groups chosen for the product", async () => {
@@ -217,7 +224,7 @@ describe("product form option groups", () => {
     fireEvent.click(screen.getByRole("option", { name: "Extras (inactivo)" }));
     fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
 
-    await waitFor(() => expect(productApi.setModifierGroups).toHaveBeenCalledWith(3, [1, 2]));
+    await waitFor(() => expect(productApi.setLabels).toHaveBeenCalledWith(3, { modifier_group_ids: [1, 2] }));
   });
 });
 

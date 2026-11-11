@@ -1,0 +1,37 @@
+.menu-filters {
+  margin: 0.75rem 0;
+
+  .ui.segment {
+    margin-top: 0.5rem;
+  }
+
+  .ui.message {
+    margin-top: 0.5rem;
+  }
+}
+
+.product-labels {
+  margin-top: 0.35rem;
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+
+    .ui.label {
+      margin: 0;
+    }
+  }
+
+  &__allergens {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.85em;
+  }
+}
+
+.menu-allergen-notice {
+  margin-top: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.85em;
+}

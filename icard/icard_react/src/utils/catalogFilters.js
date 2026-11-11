@@ -12,6 +12,7 @@ export const PRODUCT_FILTERS = {
     category: byCategory,
     active: (product, value) => matchesBoolean(product.active, value),
     available: (product, value) => matchesBoolean(product.is_available, value),
+    allergensDeclared: (product, value) => matchesBoolean(product.allergens_declared, value),
   },
 };
 
@@ -66,6 +67,7 @@ export function productCategoryOptions(products) {
 }
 
 export const AVAILABLE_OPTIONS = booleanOptions("Disponibles", "Agotados");
+export const ALLERGENS_DECLARED_OPTIONS = booleanOptions("Revisados", "Sin revisar");
 export const LOW_STOCK_OPTIONS = booleanOptions("Pocas unidades", "Stock suficiente");
 export const ACTIVE_OPTIONS = booleanOptions("Activos", "Inactivos");
 export const ON_MENU_OPTIONS = booleanOptions("En la carta", "Fuera de la carta");

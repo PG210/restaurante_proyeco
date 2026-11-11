@@ -12,3 +12,4 @@ export * from "./NotificationBell";
 export * from "./Bill";
 export * from "./Stock";
 export * from "./Modifier";
+export * from "./ProductLabel";

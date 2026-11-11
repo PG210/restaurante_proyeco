@@ -7,12 +7,7 @@ import "./AddEditProductForm.scss";
 import { useCategory, useProduct } from "../../../../hooks";
 import { notifyError } from "../../../../utils/notify";
 import { productApi } from "../../../../api/product";
-import {
-  ModifierGroupsField,
-  modifierGroupInitialValues,
-  modifierGroupsChanged,
-  withoutModifierGroups,
-} from "./ModifierGroupsField";
+import { ProductLabelsField, labelsPayload, productLabelInitialValues, withoutLabels } from "./ProductLabelsField";
 import { StockFields, stockInitialValues, stockSchema, toProductPayload } from "./StockFields";
 
 const ACCEPTED_IMAGES = {
@@ -39,11 +34,10 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
     validateOnChange: false,
     onSubmit: async (formValue) => {
       try {
-        const payload = toProductPayload(withoutModifierGroups(formValue), product);
+        const payload = toProductPayload(withoutLabels(formValue), product);
         const saved = product ? await updateProduct(product.id, payload) : await addProduct(payload);
-        if (modifierGroupsChanged(formValue, product)) {
-          await productApi.setModifierGroups(saved?.id ?? product.id, formValue.modifierGroupIds);
-        }
+        const labels = labelsPayload(formValue, product);
+        if (labels) await productApi.setLabels(saved?.id ?? product.id, labels);
         onRefetch();
         onClose();
       } catch (error) {
@@ -132,7 +126,7 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
 
       <StockFields formik={formik} isUpdate={Boolean(product)} />
 
-      <ModifierGroupsField formik={formik} />
+      <ProductLabelsField formik={formik} />
 
       <Button type="button" fluid {...getRootProps()} color={formik.errors.image && "red"}>
         {previewImage ? "Cambiar imagen" : "Subir imagen del producto"}
@@ -169,7 +163,7 @@ function initialValues(product) {
     active: Boolean(product?.active),
     image: null,
     ...stockInitialValues(product),
-    ...modifierGroupInitialValues(product),
+    ...productLabelInitialValues(product),
   };
 }
 

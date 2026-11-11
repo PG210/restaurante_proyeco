@@ -7,10 +7,11 @@ import { useAvailabilityToggle, useFormModal, useProduct, useTableFilters } from
 import {
   ON_MENU_OPTIONS,
   AVAILABLE_OPTIONS,
+  ALLERGENS_DECLARED_OPTIONS,
   PRODUCT_FILTERS,
   productCategoryOptions,
 } from "../../utils/catalogFilters";
-import { AVAILABILITY_PATH, MODIFIERS_PATH } from "../../utils/adminSections";
+import { AVAILABILITY_PATH, LABELS_PATH, MODIFIERS_PATH } from "../../utils/adminSections";
 import { notifyError } from "../../utils/notify";
 
 export function ProductAdmin() {
@@ -31,6 +32,7 @@ export function ProductAdmin() {
       { name: "category", label: "Categoría", options: productCategoryOptions(products) },
       { name: "active", label: "En la carta", options: ON_MENU_OPTIONS },
       { name: "available", label: "Disponibilidad", options: AVAILABLE_OPTIONS },
+      { name: "allergensDeclared", label: "Alérgenos", options: ALLERGENS_DECLARED_OPTIONS },
     ],
     [products],
   );
@@ -64,7 +66,10 @@ export function ProductAdmin() {
         btnClick={addProduct}
         btnTitleTwo="Disponibilidad y stock"
         btnClickTwo={() => navigate(AVAILABILITY_PATH)}
-        extraButtons={[{ title: "Modificadores", onClick: () => navigate(MODIFIERS_PATH) }]}
+        extraButtons={[
+          { title: "Modificadores", onClick: () => navigate(MODIFIERS_PATH) },
+          { title: "Alérgenos y etiquetas", onClick: () => navigate(LABELS_PATH) },
+        ]}
       />
 
       {products === null ? (
