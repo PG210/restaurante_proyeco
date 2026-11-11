@@ -5,13 +5,16 @@ from rest_framework import serializers
 
 from categories.api.serializers import CategorySerializer
 from icard.serializers import OptimizedImageMixin
+from products.labels import active_labels
 from products.models import (
     MIN_MAX_CHOICES,
     STOCK_NOTE_MAX_LENGTH,
+    Allergen,
     Modifier,
     ModifierGroup,
     Product,
     StockMovement,
+    Tag,
 )
 from products.modifiers import offered_groups, offered_modifiers, sync_modifiers
 
@@ -38,6 +41,11 @@ class OfferedModifierGroupSerializer(serializers.ModelSerializer):
         return OfferedModifierSerializer(offered_modifiers(group), many=True).data
 
 
+class OfferedLabelSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+
+
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_data = CategorySerializer(source='category', read_only=True)
     is_available = serializers.BooleanField(read_only=True)
@@ -46,6 +54,10 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     sold_today = serializers.SerializerMethodField()
     modifier_groups = serializers.SerializerMethodField()
     modifier_group_ids = serializers.SerializerMethodField()
+    allergens = serializers.SerializerMethodField()
+    allergen_ids = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+    tag_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -63,14 +75,32 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
             'category_data',
             'modifier_groups',
             'modifier_group_ids',
+            'allergens',
+            'allergen_ids',
+            'allergens_declared',
+            'tags',
+            'tag_ids',
             *STOCK_FIELDS,
         ]
+        read_only_fields = ['allergens_declared']
 
     def get_modifier_groups(self, product: Product) -> list[dict]:
         return OfferedModifierGroupSerializer(offered_groups(product), many=True).data
 
     def get_modifier_group_ids(self, product: Product) -> list[int]:
         return [group.pk for group in product.modifier_groups.all()]
+
+    def get_allergens(self, product: Product) -> list[dict]:
+        return OfferedLabelSerializer(active_labels(product.allergens.all()), many=True).data
+
+    def get_allergen_ids(self, product: Product) -> list[int]:
+        return [allergen.pk for allergen in active_labels(product.allergens.all())]
+
+    def get_tags(self, product: Product) -> list[dict]:
+        return OfferedLabelSerializer(active_labels(product.tags.all()), many=True).data
+
+    def get_tag_ids(self, product: Product) -> list[int]:
+        return [tag.pk for tag in active_labels(product.tags.all())]
 
     def get_sold_today(self, product: Product) -> int | None:
         if not product.tracks_stock:
@@ -129,10 +159,50 @@ class StockMovementSerializer(serializers.ModelSerializer):
         return user.get_full_name() or user.email
 
 
-class ProductModifierGroupsSerializer(serializers.Serializer):
+class ProductLabelsSerializer(serializers.Serializer):
     modifier_group_ids = serializers.PrimaryKeyRelatedField(
-        queryset=ModifierGroup.objects.all(), many=True, allow_empty=True
+        queryset=ModifierGroup.objects.all(), many=True, allow_empty=True, required=False
     )
+    allergen_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Allergen.objects.filter(active=True), many=True, allow_empty=True, required=False
+    )
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.filter(active=True), many=True, allow_empty=True, required=False
+    )
+    allergens_declared = serializers.BooleanField(required=False)
+
+
+class LabelSerializer(serializers.ModelSerializer):
+    product_count = serializers.IntegerField(read_only=True, default=0)
+    duplicate_message = ''
+
+    class Meta:
+        fields = ['id', 'name', 'active', 'position', 'product_count']
+
+    def validate_name(self, value: str) -> str:
+        name = value.strip()
+        if not name:
+            raise serializers.ValidationError('El nombre es obligatorio.')
+        duplicates = self.Meta.model.objects.filter(name__iexact=name)
+        if self.instance is not None:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise serializers.ValidationError(self.duplicate_message)
+        return name
+
+
+class AllergenSerializer(LabelSerializer):
+    duplicate_message = 'Ya existe un alérgeno con ese nombre.'
+
+    class Meta(LabelSerializer.Meta):
+        model = Allergen
+
+
+class TagSerializer(LabelSerializer):
+    duplicate_message = 'Ya existe una etiqueta con ese nombre.'
+
+    class Meta(LabelSerializer.Meta):
+        model = Tag
 
 
 class ModifierWriteSerializer(serializers.ModelSerializer):

@@ -10,7 +10,7 @@ class ProductFilter(filters.FilterSet):
 
     class Meta:
         model = Product
-        fields = ['category', 'active']
+        fields = ['category', 'active', 'allergens_declared']
 
     def filter_is_available(self, queryset, name, value):
         return queryset.available() if value else queryset.sold_out()

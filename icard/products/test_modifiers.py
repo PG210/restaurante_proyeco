@@ -198,7 +198,7 @@ class MenuTests(ModifierTestCase):
         self.client.force_authenticate(self.admin)
 
         response = self.client.put(
-            f'{PRODUCTS_URL}{self.juice.id}/modifier-groups/',
+            f'{PRODUCTS_URL}{self.juice.id}/labels/',
             {'modifier_group_ids': [self.extras.id]},
             format='json',
         )
@@ -206,12 +206,12 @@ class MenuTests(ModifierTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['modifier_group_ids'], [self.extras.id])
         response = self.client.put(
-            f'{PRODUCTS_URL}{self.juice.id}/modifier-groups/', {'modifier_group_ids': []}, format='json'
+            f'{PRODUCTS_URL}{self.juice.id}/labels/', {'modifier_group_ids': []}, format='json'
         )
         self.assertEqual(response.data['modifier_groups'], [])
 
     def test_assigning_groups_requires_staff_and_existing_groups(self) -> None:
-        url = f'{PRODUCTS_URL}{self.juice.id}/modifier-groups/'
+        url = f'{PRODUCTS_URL}{self.juice.id}/labels/'
         self.client.force_authenticate(self.waiter)
         self.assertEqual(
             self.client.put(url, {'modifier_group_ids': []}, format='json').status_code,

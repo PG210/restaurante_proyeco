@@ -9,6 +9,7 @@ from products.service_day import current_service_day
 STOCK_NOTE_MAX_LENGTH = 255
 MODIFIER_NAME_MAX_LENGTH = 100
 MIN_MAX_CHOICES = 1
+LABEL_NAME_MAX_LENGTH = 50
 
 
 class ProductQuerySet(models.QuerySet):
@@ -40,6 +41,9 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(null=True, blank=True)
     low_stock_threshold = models.PositiveIntegerField(null=True, blank=True)
     modifier_groups = models.ManyToManyField('products.ModifierGroup', blank=True, related_name='products')
+    allergens = models.ManyToManyField('products.Allergen', blank=True, related_name='products')
+    tags = models.ManyToManyField('products.Tag', blank=True, related_name='products')
+    allergens_declared = models.BooleanField(default=False)
 
     objects = ProductQuerySet.as_manager()
 
@@ -155,3 +159,28 @@ class Modifier(models.Model):
 
     def __str__(self):
         return f'{self.group}: {self.name}'
+
+
+class ProductLabel(models.Model):
+    name = models.CharField(max_length=LABEL_NAME_MAX_LENGTH, unique=True)
+    active = models.BooleanField(default=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        abstract = True
+        ordering = ('position', 'name', 'id')
+
+    def __str__(self):
+        return self.name
+
+
+class Allergen(ProductLabel):
+    class Meta(ProductLabel.Meta):
+        verbose_name = 'alérgeno'
+        verbose_name_plural = 'alérgenos'
+
+
+class Tag(ProductLabel):
+    class Meta(ProductLabel.Meta):
+        verbose_name = 'etiqueta'
+        verbose_name_plural = 'etiquetas'

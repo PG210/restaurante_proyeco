@@ -1,12 +1,13 @@
 from django.contrib import admin
 
-from products.models import Modifier, ModifierGroup, Product, StockMovement
+from products.models import Allergen, Modifier, ModifierGroup, Product, StockMovement, Tag
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'price', 'active', 'stock', 'sold_out_on', 'position')
-    list_filter = ('active', 'category')
+    list_filter = ('active', 'category', 'allergens_declared')
+    filter_horizontal = ('modifier_groups', 'allergens', 'tags')
     search_fields = ('title',)
 
 
@@ -35,3 +36,10 @@ class ModifierGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'min_choices', 'max_choices', 'active', 'position')
     search_fields = ('name',)
     inlines = [ModifierInline]
+
+
+@admin.register(Allergen, Tag)
+class ProductLabelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'active', 'position')
+    list_filter = ('active',)
+    search_fields = ('name',)

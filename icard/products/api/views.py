@@ -15,16 +15,18 @@ from icard.media import ImageCleanupMixin
 from products.api.filters import ProductFilter
 from products.api.serializers import (
     AddStockSerializer,
+    AllergenSerializer,
     ModifierGroupSerializer,
     ProductAvailabilitySerializer,
-    ProductModifierGroupsSerializer,
+    ProductLabelsSerializer,
     ProductSerializer,
     RestockResultSerializer,
     SetStockSerializer,
     StockMovementSerializer,
+    TagSerializer,
 )
-from products.models import ModifierGroup, Product
-from products.modifiers import with_modifier_groups
+from products.labels import set_product_labels, with_product_relations
+from products.models import Allergen, ModifierGroup, Product, Tag
 from products.permissions import MANAGE_STOCK, SET_PRODUCT_AVAILABILITY, qualified_permission
 from products.services import restock_all, set_availability
 from products.stock import StockError, add_stock, record_product_edit, set_stock, with_sold_today
@@ -57,7 +59,7 @@ class ProductApiViewSet(ImageCleanupMixin, ModelViewSet):
         return [permission_class()]
 
     def get_queryset(self):
-        queryset = with_modifier_groups(Product.objects.select_related('category'))
+        queryset = with_product_relations(Product.objects.select_related('category'))
         if self._shows_stock():
             queryset = with_sold_today(queryset)
         if self.request.user.is_staff:
@@ -82,12 +84,18 @@ class ProductApiViewSet(ImageCleanupMixin, ModelViewSet):
         record_product_edit(previous_stock, product, self.request.user)
         return product
 
-    @action(detail=True, methods=['put'], url_path='modifier-groups')
-    def modifier_groups(self, request, pk=None):
-        serializer = ProductModifierGroupsSerializer(data=request.data)
+    @action(detail=True, methods=['put'])
+    def labels(self, request, pk=None):
+        serializer = ProductLabelsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        product = self.get_object()
-        product.modifier_groups.set(serializer.validated_data['modifier_group_ids'])
+        data = serializer.validated_data
+        product = set_product_labels(
+            self.get_object(),
+            modifier_groups=data.get('modifier_group_ids'),
+            allergens=data.get('allergen_ids'),
+            tags=data.get('tag_ids'),
+            allergens_declared=data.get('allergens_declared'),
+        )
         return self._product_response(product)
 
     @action(detail=True, methods=['patch'])
@@ -151,3 +159,30 @@ class ModifierGroupViewSet(ModelViewSet):
             .prefetch_related('modifiers')
             .distinct()
         )
+
+
+class ProductLabelViewSet(ModelViewSet):
+    """Anyone can read the active labels, which the menu filters use. Only the admin manages them."""
+
+    model: type[Allergen] | type[Tag]
+    throttle_classes = [AnonRateThrottle]
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['active']
+    search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = self.model.objects.annotate(product_count=Count('products', distinct=True))
+        if self.request.user.is_staff:
+            return queryset
+        return queryset.filter(active=True)
+
+
+class AllergenViewSet(ProductLabelViewSet):
+    model = Allergen
+    serializer_class = AllergenSerializer
+
+
+class TagViewSet(ProductLabelViewSet):
+    model = Tag
+    serializer_class = TagSerializer

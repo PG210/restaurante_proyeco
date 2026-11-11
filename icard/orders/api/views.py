@@ -35,7 +35,7 @@ from orders.services import (
     delete_order,
     update_order,
 )
-from products.modifiers import modifier_groups_prefetch
+from products.labels import product_prefetches
 from products.stock import InsufficientStockError
 from users.api.permissions import HasActionPermission
 
@@ -64,7 +64,7 @@ class OrderApiViewSet(ModelViewSet):
         'destroy': qualified_permission(DELETE_ORDER),
     }
     queryset = Order.objects.select_related('table', 'product__category', 'created_by').prefetch_related(
-        'modifiers', modifier_groups_prefetch('product__modifier_groups')
+        'modifiers', *product_prefetches('product__')
     )
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = OrderFilter
