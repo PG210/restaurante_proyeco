@@ -122,6 +122,25 @@ export function isLate(createdAt, now, limitMinutes = KITCHEN_LATE_MINUTES) {
   return getWaitingMinutes(createdAt, now) >= limitMinutes;
 }
 
+const TIMED_STATUSES = [ORDER_STATUS.PENDING, ORDER_STATUS.PREPARING];
+
+/** When the order reached the kitchen; prepaid orders only arrive once they are paid. */
+export function kitchenSince(order) {
+  return order.kitchen_at ?? order.created_at;
+}
+
+/**
+ * Waiting time, estimate and delay of a kitchen card. The estimate only applies while the
+ * kitchen is working on the order; "Listo" and orders without a time keep the fixed limit.
+ */
+export function kitchenTiming(order, now) {
+  const waiting = getWaitingMinutes(kitchenSince(order), now);
+  const estimate = TIMED_STATUSES.includes(order.status) && order.preparation_minutes > 0 ? order.preparation_minutes : null;
+  if (estimate === null) return { waiting, estimate, overdue: 0, late: waiting >= KITCHEN_LATE_MINUTES };
+  const overdue = Math.max(waiting - estimate, 0);
+  return { waiting, estimate, overdue, late: overdue > 0 };
+}
+
 export function getTableState({ pending, preparing, ready, awaiting_payment: awaitingPayment, bill_requested: billRequested }) {
   if (billRequested) return TABLE_STATE.BILL;
   if (ready > 0) return TABLE_STATE.READY;

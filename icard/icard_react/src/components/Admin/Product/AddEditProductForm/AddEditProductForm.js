@@ -9,6 +9,11 @@ import { notifyError } from "../../../../utils/notify";
 import { productApi } from "../../../../api/product";
 import { ProductLabelsField, labelsPayload, productLabelInitialValues, withoutLabels } from "./ProductLabelsField";
 import { StockFields, stockInitialValues, stockSchema, toProductPayload } from "./StockFields";
+import {
+  MAX_PREPARATION_MINUTES,
+  MIN_PREPARATION_MINUTES,
+  PREPARATION_MESSAGE,
+} from "../../../../utils/preparation";
 
 const ACCEPTED_IMAGES = {
   "image/jpeg": [],
@@ -115,6 +120,20 @@ export function AddEditProductForm({ onClose, onRefetch, product }) {
         error={formik.errors.position}
       />
 
+      <Form.Input
+        id="product-preparation-time"
+        type="number"
+        min={MIN_PREPARATION_MINUTES}
+        max={MAX_PREPARATION_MINUTES}
+        step="1"
+        name="preparation_time"
+        label="Tiempo de preparación (min)"
+        placeholder="Sin dato"
+        value={formik.values.preparation_time}
+        onChange={formik.handleChange}
+        error={formik.errors.preparation_time}
+      />
+
       <div className="add-edit-product-form__active">
         <Checkbox
           toggle
@@ -161,6 +180,7 @@ function initialValues(product) {
     position: product?.position ?? 0,
     category: product?.category_data?.id ?? "",
     active: Boolean(product?.active),
+    preparation_time: product?.preparation_time ?? "",
     image: null,
     ...stockInitialValues(product),
     ...productLabelInitialValues(product),
@@ -181,6 +201,13 @@ function productSchema(isUpdate) {
     price: Yup.number().required(true).positive(true).test("decimals", PRICE_DECIMALS_MESSAGE, hasAllowedDecimals),
     category: Yup.number().required(true),
     active: Yup.boolean().required(true),
+    preparation_time: Yup.number()
+      .typeError(PREPARATION_MESSAGE)
+      .integer(PREPARATION_MESSAGE)
+      .min(MIN_PREPARATION_MINUTES, PREPARATION_MESSAGE)
+      .max(MAX_PREPARATION_MINUTES, PREPARATION_MESSAGE)
+      .nullable()
+      .transform((value, original) => (original === "" ? null : value)),
     image: isUpdate ? Yup.mixed().nullable() : Yup.mixed().required("La imagen es obligatoria"),
     ...stockSchema,
   };

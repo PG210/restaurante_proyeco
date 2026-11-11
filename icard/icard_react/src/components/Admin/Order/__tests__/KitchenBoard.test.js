@@ -95,3 +95,24 @@ describe("KitchenBoard card", () => {
     expect(screen.queryByRole("button", { name: "Ver nota" })).not.toBeInTheDocument();
   });
 });
+
+describe("KitchenBoard preparation time", () => {
+  it("shows the estimate and how late the order is", () => {
+    renderBoard([{ ...kitchenOrder(1), preparation_minutes: 120 }]);
+
+    expect(screen.getByText("Mesa 4 · 2 h 5 min · Estimado: 2 h · +5 min")).toBeInTheDocument();
+  });
+
+  it("shows no delay for a slow dish that is still within its time", () => {
+    renderBoard([{ ...kitchenOrder(1), preparation_minutes: 180 }]);
+
+    expect(screen.getByText("Mesa 4 · 2 h 5 min · Estimado: 3 h")).toBeInTheDocument();
+  });
+
+  it("counts a prepaid order from when it was paid", () => {
+    const paid = new Date(NOW - 2 * 60000).toISOString();
+    renderBoard([{ ...kitchenOrder(1), kitchen_at: paid }]);
+
+    expect(screen.getByText("Mesa 4 · 2 min")).toBeInTheDocument();
+  });
+});

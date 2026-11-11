@@ -7,6 +7,7 @@ import { useCustomer } from "../../context/CustomerContext";
 import { ModalBasic, ModifierDialog } from "../../components/Common";
 import { useMenuFilters } from "../../hooks";
 import { formatPrice } from "../../utils/cart";
+import { menuPreparationText } from "../../utils/preparation";
 import { ALLERGEN_NOTICE, filterMenu, hiddenMessage } from "../../utils/labels";
 import { hasModifiers } from "../../utils/modifiers";
 import { customerPath } from "../../utils/customerPaths";
@@ -80,7 +81,10 @@ export function ProductList({ products, onAdd, emptyText = NO_PRODUCTS_TEXT }) {
           <Item.Image size="tiny" src={product.image} alt={product.title} />
           <Item.Content verticalAlign="middle">
             <Item.Header>{product.title}</Item.Header>
-            <Item.Meta>{formatPrice(product.price)}</Item.Meta>
+            <Item.Meta>
+              {formatPrice(product.price)}
+              <PreparationTime minutes={product.preparation_time} />
+            </Item.Meta>
             {product.description && <Item.Description>{product.description}</Item.Description>}
             <ProductLabels product={product} />
             <Item.Extra>
@@ -99,4 +103,9 @@ export function ProductList({ products, onAdd, emptyText = NO_PRODUCTS_TEXT }) {
       ))}
     </Item.Group>
   );
+}
+
+function PreparationTime({ minutes }) {
+  const text = menuPreparationText(minutes);
+  return text && <span className="menu-preparation-time">{text}</span>;
 }

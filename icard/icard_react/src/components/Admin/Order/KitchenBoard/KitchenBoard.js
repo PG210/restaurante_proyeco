@@ -6,8 +6,7 @@ import {
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
   formatWaitingTime,
-  getWaitingMinutes,
-  isLate,
+  kitchenTiming,
 } from "../../../../utils/orderStatus";
 import { OrderActions } from "../OrderActions/OrderActions";
 import { modifierSummary } from "../../../../utils/modifiers";
@@ -37,7 +36,7 @@ export function KitchenBoard({ orders, user, now, onAdvance }) {
 }
 
 function KitchenOrderCard({ order, user, now, onAdvance }) {
-  const late = isLate(order.created_at, now);
+  const { waiting, estimate, overdue, late } = kitchenTiming(order, now);
 
   return (
     <Card fluid className={late ? "kitchen-board__card kitchen-board__card--late" : "kitchen-board__card"}>
@@ -49,7 +48,9 @@ function KitchenOrderCard({ order, user, now, onAdvance }) {
           <Card.Description className="kitchen-board__modifiers">{modifierSummary(order.modifiers)}</Card.Description>
         )}
         <Card.Meta>
-          Mesa {order.table_data?.number} · {formatWaitingTime(getWaitingMinutes(order.created_at, now))}
+          Mesa {order.table_data?.number} · {formatWaitingTime(waiting)}
+          {estimate !== null && ` · Estimado: ${formatWaitingTime(estimate)}`}
+          {overdue > 0 && ` · +${formatWaitingTime(overdue)}`}
         </Card.Meta>
         {order.notes && <OrderNote notes={order.notes} />}
       </Card.Content>
