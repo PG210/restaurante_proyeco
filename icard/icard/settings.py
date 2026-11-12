@@ -165,3 +165,5 @@ AUTH_USER_MODEL = 'users.User'
 
 
 CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS', default=['http://localhost:3000'])
+# The panel reads the file name of report downloads (phase 7b).
+CORS_EXPOSE_HEADERS = ['Content-Disposition']

@@ -45,6 +45,7 @@ class Order(models.Model):
     )
 
     class Meta:
+        indexes = [models.Index(fields=['created_at'], name='order_created_at_idx')]
         permissions = [
             ('prepare_order', 'Puede preparar pedidos'),
             ('deliver_order', 'Puede marcar pedidos como entregados'),
