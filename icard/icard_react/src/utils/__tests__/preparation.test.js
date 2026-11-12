@@ -1,6 +1,6 @@
 import { KITCHEN_LATE_MINUTES } from "../constants";
 import { ORDER_STATUS, kitchenSince, kitchenTiming } from "../orderStatus";
-import { MAX_PREPARATION_MINUTES, menuPreparationText, preparationCell } from "../preparation";
+import { MAX_PREPARATION_MINUTES, formatDuration, menuPreparationText, preparationCell } from "../preparation";
 
 const CREATED_AT = "2026-11-11T12:00:00Z";
 const MINUTE = 60000;
@@ -57,5 +57,14 @@ describe("preparation texts", () => {
     expect(menuPreparationText(MAX_PREPARATION_MINUTES)).toBe(`≈ ${MAX_PREPARATION_MINUTES} min`);
     expect(menuPreparationText(null)).toBeNull();
     expect(menuPreparationText(undefined)).toBeNull();
+  });
+});
+
+describe("formatDuration", () => {
+  it("shows minutes with one decimal and hours past sixty", () => {
+    expect(formatDuration(12)).toBe("12 min");
+    expect(formatDuration(12.5)).toBe("12.5 min");
+    expect(formatDuration(65)).toBe("1 h 05 min");
+    expect(formatDuration(null)).toBe("—");
   });
 });

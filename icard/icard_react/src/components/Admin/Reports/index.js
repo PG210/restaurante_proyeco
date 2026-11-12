@@ -5,3 +5,4 @@ export * from "./CategoriesReport";
 export * from "./HoursHeatmap";
 export * from "./StaffReport";
 export * from "./CancellationsReport";
+export * from "./KitchenReport";

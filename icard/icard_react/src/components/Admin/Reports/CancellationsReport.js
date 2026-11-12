@@ -68,6 +68,7 @@ function Latest({ rows }) {
           <Table.HeaderCell>Valor</Table.HeaderCell>
           <Table.HeaderCell>Motivo</Table.HeaderCell>
           <Table.HeaderCell>Cargado por</Table.HeaderCell>
+          <Table.HeaderCell>Cancelado</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -81,6 +82,7 @@ function Latest({ rows }) {
             <Table.Cell>{formatMoney(row.amount)}</Table.Cell>
             <Table.Cell>{row.reason}</Table.Cell>
             <Table.Cell>{row.placed_by}</Table.Cell>
+            <Table.Cell>{row.cancelled_at ? `${formatDateTime(row.cancelled_at)} · ${row.cancelled_by ?? "—"}` : "—"}</Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>

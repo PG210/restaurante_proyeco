@@ -128,7 +128,19 @@ describe("ReportsAdmin", () => {
     fireEvent.click(screen.getByRole("button", { name: "Descargar CSV" }));
 
     await waitFor(() => expect(saveFile).toHaveBeenCalledWith(blob, "reporte-horas.csv"));
-    expect(reportsApi.downloadSales).toHaveBeenCalledWith("hours", {});
+    expect(reportsApi.downloadSales).toHaveBeenCalledWith("hours", {}, "csv");
+  });
+
+  it("downloads the open report as Excel", async () => {
+    const blob = new Blob(["x"]);
+    reportsApi.downloadSales.mockResolvedValue({ blob, filename: "reporte-productos.xlsx" });
+    renderPage("/admin/reports?from=2026-11-01&to=2026-11-07");
+    await screen.findByRole("table", { name: "Todos los productos" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Descargar Excel" }));
+
+    await waitFor(() => expect(saveFile).toHaveBeenCalledWith(blob, "reporte-productos.xlsx"));
+    expect(reportsApi.downloadSales).toHaveBeenCalledWith("products", { from: "2026-11-01", to: "2026-11-07" }, "xlsx");
   });
 
   it("is only for the admin", () => {

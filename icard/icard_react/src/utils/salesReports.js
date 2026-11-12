@@ -6,9 +6,12 @@ export const REPORT_TABS = [
   { key: "hours", label: "Horas" },
   { key: "staff", label: "Personal" },
   { key: "cancellations", label: "Cancelaciones" },
+  { key: "kitchen", label: "Cocina" },
 ];
 
 export const DEFAULT_REPORT = REPORT_TABS[0].key;
+
+export const EXPORT_FORMATS = { CSV: "csv", XLSX: "xlsx" };
 
 export const CONSUMPTION_NOTE =
   "Consumo de los pedidos no cancelados, por la jornada en que se pidieron. Incluye cuentas abiertas, así que puede no coincidir con lo cobrado en el Resumen o en el historial de pagos.";
@@ -21,6 +24,19 @@ export const STAFF_NOTE =
 export const CANCELLATIONS_NOTE =
   "Pedidos hechos en estas fechas que se cancelaron. Los motivos iguales se agrupan sin importar mayúsculas.";
 export const EMPTY_REPORT_MESSAGE = "Sin pedidos en estas fechas.";
+export const KITCHEN_NOTE =
+  "Preparación: desde que el pedido entra a cocina hasta que se marca listo. Mediana: la mitad de los pedidos tardó menos. Los pedidos de más de 4 horas no cuentan: casi siempre son pedidos marcados tarde.";
+export const NO_KITCHEN_DATA_MESSAGE = "Sin pedidos medidos en estas fechas.";
+
+export function measuredSinceText(date) {
+  return date ? `Los tiempos se miden desde el ${date}; los pedidos anteriores no tienen registro.` : "Todavía no hay tiempos registrados.";
+}
+
+export function forgottenText(count) {
+  return count === 1
+    ? "1 pedido con más de 4 h no cuenta en las cifras: probablemente se marcó listo tarde."
+    : `${count} pedidos con más de 4 h no cuentan en las cifras: probablemente se marcaron listos tarde.`;
+}
 
 export const WEEKDAYS = [
   { number: 1, label: "Lunes", short: "Lun" },

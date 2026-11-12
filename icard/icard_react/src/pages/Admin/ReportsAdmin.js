@@ -7,12 +7,20 @@ import {
   CategoriesReport,
   HeaderPage,
   HoursHeatmap,
+  KitchenReport,
   ProductsReport,
   StaffReport,
 } from "../../components/Admin";
 import { notifyError } from "../../utils/notify";
 import { rangeError, rangeShortcuts } from "../../utils/reportRange";
-import { CONSUMPTION_NOTE, DEFAULT_REPORT, REPORT_TABS, isReportKey, saveFile } from "../../utils/salesReports";
+import {
+  CONSUMPTION_NOTE,
+  DEFAULT_REPORT,
+  EXPORT_FORMATS,
+  REPORT_TABS,
+  isReportKey,
+  saveFile,
+} from "../../utils/salesReports";
 
 const REPORT_VIEWS = {
   products: ProductsReport,
@@ -20,7 +28,13 @@ const REPORT_VIEWS = {
   hours: HoursHeatmap,
   staff: StaffReport,
   cancellations: CancellationsReport,
+  kitchen: KitchenReport,
 };
+
+const DOWNLOADS = [
+  { format: EXPORT_FORMATS.CSV, label: "Descargar CSV" },
+  { format: EXPORT_FORMATS.XLSX, label: "Descargar Excel" },
+];
 
 function readSelection(params) {
   const tab = params.get("tab");
@@ -44,7 +58,7 @@ export function ReportsAdmin() {
   const [draft, setDraft] = useState({ from, to });
   const [loaded, setLoaded] = useState(null);
   const [today, setToday] = useState(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState(null);
 
   useEffect(() => {
     if (invalidRange) return undefined;
@@ -77,15 +91,15 @@ export function ReportsAdmin() {
     select({ from: shortcut.from, to: shortcut.to });
   };
 
-  const download = async () => {
-    setDownloading(true);
+  const download = async (format) => {
+    setDownloading(format);
     try {
-      const { blob, filename } = await reportsApi.downloadSales(report, requestedRange({ from, to }));
+      const { blob, filename } = await reportsApi.downloadSales(report, requestedRange({ from, to }), format);
       saveFile(blob, filename);
     } catch (error) {
       notifyError(error);
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   };
 
@@ -107,14 +121,17 @@ export function ReportsAdmin() {
             ))}
           </Button.Group>
         )}
-        <Button
-          type="button"
-          icon="download"
-          content="Descargar CSV"
-          onClick={download}
-          loading={downloading}
-          disabled={downloading || Boolean(invalidRange)}
-        />
+        {DOWNLOADS.map((option) => (
+          <Button
+            key={option.format}
+            type="button"
+            icon="download"
+            content={option.label}
+            onClick={() => download(option.format)}
+            loading={downloading === option.format}
+            disabled={Boolean(downloading) || Boolean(invalidRange)}
+          />
+        ))}
       </Form>
       {(draftError || invalidRange) && <Message warning content={draftError || invalidRange} />}
       <p className="report-note">{CONSUMPTION_NOTE}</p>

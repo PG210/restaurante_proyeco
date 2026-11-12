@@ -1,8 +1,8 @@
 import { apiDownload, apiRequest } from "./client";
 import { toQueryString } from "./resource";
+import { EXPORT_FORMATS } from "../utils/salesReports";
 
 const CASH_CLOSINGS_PATH = "/api/cash-closings/";
-const CSV_EXPORT = "csv";
 
 function salesReportPath(report, { from, to } = {}, exportFormat) {
   return `/api/reports/${report}/${toQueryString({ from, to, export: exportFormat })}`;
@@ -11,7 +11,8 @@ function salesReportPath(report, { from, to } = {}, exportFormat) {
 export const reportsApi = {
   dashboard: () => apiRequest("/api/reports/dashboard/"),
   sales: (report, range) => apiRequest(salesReportPath(report, range)),
-  downloadSales: (report, range) => apiDownload(salesReportPath(report, range, CSV_EXPORT)),
+  downloadSales: (report, range, format = EXPORT_FORMATS.CSV) =>
+    apiDownload(salesReportPath(report, range, format)),
 };
 
 export const cashClosingApi = {

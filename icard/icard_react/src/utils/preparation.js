@@ -17,3 +17,14 @@ export function preparationCell(minutes) {
 export function menuPreparationText(minutes) {
   return hasMinutes(minutes) ? `≈ ${minutes} min` : null;
 }
+
+const MINUTES_PER_HOUR = 60;
+
+/** Kitchen report: "12.5 min", "1 h 05 min", or the empty marker when there is no figure. */
+export function formatDuration(minutes) {
+  if (minutes === null || minutes === undefined) return EMPTY_VALUE;
+  if (minutes < MINUTES_PER_HOUR) return `${Number(minutes.toFixed(1))} min`;
+  const rounded = Math.round(minutes);
+  const hours = Math.floor(rounded / MINUTES_PER_HOUR);
+  return `${hours} h ${String(rounded % MINUTES_PER_HOUR).padStart(2, "0")} min`;
+}
