@@ -1,0 +1,15 @@
+.cash-closing__difference {
+  font-weight: bold;
+
+  &--red {
+    color: #db2828;
+  }
+
+  &--orange {
+    color: #f2711c;
+  }
+
+  &--green {
+    color: #21ba45;
+  }
+}

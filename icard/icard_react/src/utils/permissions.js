@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   ATTEND_BILL_REQUEST: "attend_bill_request",
   CHARGE_BILL: "charge_bill",
   VIEW_PAYMENTS: "view_payments",
+  CLOSE_CASH_REGISTER: "close_cash_register",
   SET_PRODUCT_AVAILABILITY: "set_product_availability",
   MANAGE_STOCK: "manage_stock",
 };

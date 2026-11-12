@@ -1,31 +1,33 @@
-import React from "react";
-import {LoginAdmin} from "../../pages/Admin"; // importar el loginadmin
-
-import { useAuth } from "../../hooks"; //importar para que el usuario si esta logueado pase al panel
-
+import React, { useRef } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { LoginAdmin } from "../../pages/Admin";
+import { useAuth } from "../../hooks";
+import { TopMenu, LateralMenu } from "../../components/Admin";
+import { landingPath } from "../../utils/adminSections";
 import "./AdminLayout.scss";
 
-import { TopMenu, LateralMenu } from "../../components/Admin"; //menu superior y lateral
+export function AdminLayout({ children }) {
+  const { auth } = useAuth();
+  const { pathname } = useLocation();
+  // Only redirect right after logging in here, not when an admin opens the orders page on purpose.
+  const loggedInHere = useRef(auth === null);
 
+  if (!auth) {
+    if (auth === null) loggedInHere.current = true;
+    return <LoginAdmin />;
+  }
 
-export function AdminLayout(props){
-    const { children } = props;
-    const { auth } = useAuth(); //variable de estado
+  const landing = loggedInHere.current ? landingPath(auth.me, pathname) : null;
+  if (landing) return <Navigate to={landing} replace />;
 
-    if(!auth ) {
-         return <LoginAdmin />; //retornar el login admin
-    }
-
-    return (
-        <div className="admin-layout">
-            <div className="admin-layout__menu">
-                <TopMenu/>
-            </div>
-            <div className="admin-layout__main-content">
-                <LateralMenu>
-                   {children}
-                </LateralMenu>
-            </div>
-        </div>
-    )
+  return (
+    <div className="admin-layout">
+      <div className="admin-layout__menu">
+        <TopMenu />
+      </div>
+      <div className="admin-layout__main-content">
+        <LateralMenu>{children}</LateralMenu>
+      </div>
+    </div>
+  );
 }

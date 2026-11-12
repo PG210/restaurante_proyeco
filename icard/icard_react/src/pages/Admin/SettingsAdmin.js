@@ -9,6 +9,7 @@ import { formatCents, isValidMoney, toCents } from "../../utils/money";
 import { notifyError } from "../../utils/notify";
 import { EMPTY_VALUE } from "../../utils/constants";
 import { PAYMENT_MODE, PAYMENT_MODE_LABELS, TAX_TYPE, splitIncludedTaxCents } from "../../utils/tax";
+import { BusinessDaySetting } from "./BusinessDaySetting";
 
 export const EXAMPLE_PRICE = "30000";
 const RATE_MAX = 100;
@@ -51,6 +52,7 @@ export function settingsDraft(settings) {
     charge_iva: settings.charge_iva,
     iva_rate: settings.iva_rate ?? "",
     payment_mode: settings.payment_mode,
+    business_day_start_hour: settings.business_day_start_hour,
   };
 }
 
@@ -84,11 +86,13 @@ export function SettingsAdmin() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState([]);
+  const [savedHour, setSavedHour] = useState(null);
 
   const load = useCallback(async () => {
     try {
       const [settings, history] = await Promise.all([configurationApi.get(), configurationApi.changes(1)]);
       setDraft(settingsDraft(settings));
+      setSavedHour(settings.business_day_start_hour);
       setChanges(history.results);
     } catch (error) {
       notifyError(error);
@@ -117,7 +121,9 @@ export function SettingsAdmin() {
     if (Object.keys(draftErrors).length) return;
     setSaving(true);
     try {
-      setDraft(settingsDraft(await configurationApi.update(toSettingsPayload(draft))));
+      const saved = await configurationApi.update(toSettingsPayload(draft));
+      setDraft(settingsDraft(saved));
+      setSavedHour(saved.business_day_start_hour);
       toast.success("Configuración guardada.");
       setChanges((await configurationApi.changes(1)).results);
     } catch (error) {
@@ -192,6 +198,12 @@ export function SettingsAdmin() {
           cuentas abiertas.
         </p>
       </Segment>
+
+      <BusinessDaySetting
+        hour={draft.business_day_start_hour}
+        savedHour={savedHour}
+        onChange={(hour) => update("business_day_start_hour", hour)}
+      />
 
       <Button primary loading={saving} disabled={saving} onClick={save}>
         Guardar configuración

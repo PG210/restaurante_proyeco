@@ -4,8 +4,11 @@ export const ADMIN_HOME_PATH = "/admin";
 export const AVAILABILITY_PATH = "/admin/availability";
 export const MODIFIERS_PATH = "/admin/modifiers";
 export const LABELS_PATH = "/admin/labels";
+export const DASHBOARD_PATH = "/admin/dashboard";
+export const CASH_CLOSING_PATH = "/admin/cash-closing";
 
 export const ADMIN_SECTIONS = {
+  dashboard: { path: DASHBOARD_PATH, label: "Resumen", icon: "chart line", adminOnly: true },
   orders: {
     path: ADMIN_HOME_PATH,
     label: "Pedidos",
@@ -34,6 +37,13 @@ export const ADMIN_SECTIONS = {
     icon: "history",
     adminOnly: false,
     requiredPermissions: [PERMISSIONS.VIEW_PAYMENTS],
+  },
+  cashClosing: {
+    path: CASH_CLOSING_PATH,
+    label: "Cierre de caja",
+    icon: "calculator",
+    adminOnly: false,
+    requiredPermissions: [PERMISSIONS.CLOSE_CASH_REGISTER],
   },
   billTicket: {
     path: "/admin/bills/:id/ticket",
@@ -101,4 +111,9 @@ export function tableDetailPath(tableId) {
 
 export function billTicketPath(billId) {
   return withId(ADMIN_SECTIONS.billTicket.path, billId);
+}
+
+/** Where a user lands right after logging in on the panel home: the admin goes to the summary. */
+export function landingPath(user, pathname) {
+  return user?.is_staff && pathname === ADMIN_HOME_PATH ? DASHBOARD_PATH : null;
 }

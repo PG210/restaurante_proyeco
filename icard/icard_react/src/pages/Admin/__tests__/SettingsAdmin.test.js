@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ApiError } from "../../../api/client";
 import { configurationApi } from "../../../api/configuration";
+import { BUSINESS_DAY_WARNING } from "../../../utils/reports";
 import { SettingsAdmin, activeTaxExample, toSettingsPayload, validateDraft } from "../SettingsAdmin";
 
 jest.mock("../../../api/configuration", () => ({
@@ -14,6 +15,7 @@ const DEFAULT_SETTINGS = {
   charge_iva: false,
   iva_rate: null,
   payment_mode: "POSTPAID",
+  business_day_start_hour: 5,
 };
 
 function draft(overrides) {
@@ -92,6 +94,7 @@ describe("SettingsAdmin", () => {
         charge_iva: false,
         iva_rate: null,
         payment_mode: "POSTPAID",
+        business_day_start_hour: 5,
       }),
     );
     await waitFor(() => expect(configurationApi.changes).toHaveBeenCalledTimes(2));
@@ -151,3 +154,29 @@ describe("SettingsAdmin", () => {
     expect(screen.getByLabelText("Anticipado")).toBeChecked();
   });
 });
+
+describe("SettingsAdmin business day", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    configurationApi.get.mockResolvedValue(DEFAULT_SETTINGS);
+    configurationApi.changes.mockResolvedValue({ results: [] });
+  });
+
+  it("warns before changing when the day starts and saves the new hour", async () => {
+    configurationApi.update.mockResolvedValue({ ...DEFAULT_SETTINGS, business_day_start_hour: 3 });
+    render(<SettingsAdmin />);
+
+    expect(await screen.findByText("5:00", { selector: ".divider.text" })).toBeInTheDocument();
+    expect(screen.queryByText(BUSINESS_DAY_WARNING)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("option", { name: "3:00" }));
+    expect(screen.getByText(BUSINESS_DAY_WARNING)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Guardar configuración" }));
+
+    await waitFor(() =>
+      expect(configurationApi.update).toHaveBeenCalledWith(expect.objectContaining({ business_day_start_hour: 3 })),
+    );
+    await waitFor(() => expect(screen.queryByText(BUSINESS_DAY_WARNING)).not.toBeInTheDocument());
+  });
+});
+

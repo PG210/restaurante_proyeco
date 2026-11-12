@@ -14,3 +14,5 @@ export * from "./SettingsAdmin";
 export * from "./AvailabilityAdmin";
 export * from "./ModifiersAdmin";
 export * from "./LabelsAdmin";
+export * from "./DashboardAdmin";
+export * from "./CashClosingAdmin";
