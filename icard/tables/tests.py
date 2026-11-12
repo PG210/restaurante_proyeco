@@ -143,6 +143,26 @@ class TableStateTests(APITestCase):
         response = self._post(self.cook, 'attend-bill')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_waiter_attends_waiter_call(self) -> None:
+        Table.objects.filter(pk=self.table.pk).update(is_open=True, waiter_called_at=timezone.now())
+        response = self._post(self.waiter, 'attend-waiter')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['waiter_called'])
+        self.assertIsNone(response.data['waiter_called_at'])
+
+    def test_cook_cannot_attend_waiter_call(self) -> None:
+        Table.objects.filter(pk=self.table.pk).update(is_open=True, waiter_called_at=timezone.now())
+        response = self._post(self.cook, 'attend-waiter')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.table.refresh_from_db()
+        self.assertTrue(self.table.waiter_called)
+
+    def test_closing_clears_the_waiter_call(self) -> None:
+        Table.objects.filter(pk=self.table.pk).update(is_open=True, waiter_called_at=timezone.now())
+        response = self._post(self.waiter, 'close')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['waiter_called'])
+
     def test_open_missing_table_returns_404(self) -> None:
         response = self._post(self.waiter, 'open', MISSING_ID)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -183,6 +203,8 @@ class TableSummaryTests(APITestCase):
                 'number': 1,
                 'is_open': True,
                 'bill_requested': False,
+                'waiter_called': False,
+                'waiter_called_at': None,
                 'awaiting_payment': 0,
                 'pending': 2,
                 'preparing': 0,
@@ -193,6 +215,8 @@ class TableSummaryTests(APITestCase):
                 'number': 2,
                 'is_open': False,
                 'bill_requested': False,
+                'waiter_called': False,
+                'waiter_called_at': None,
                 'awaiting_payment': 0,
                 'pending': 0,
                 'preparing': 0,
@@ -206,6 +230,14 @@ class TableSummaryTests(APITestCase):
         self.client.force_authenticate(create_role_member(CASHIER_ROLE))
         response = self.client.get(SUMMARY_URL)
         self.assertTrue(response.data[0]['bill_requested'])
+
+    def test_summary_shows_waiter_calls_with_their_time(self) -> None:
+        Table.objects.filter(pk=self.first_table.pk).update(waiter_called_at=timezone.now())
+        self.client.force_authenticate(create_role_member(CASHIER_ROLE))
+        response = self.client.get(SUMMARY_URL)
+        self.assertTrue(response.data[0]['waiter_called'])
+        self.assertIsNotNone(response.data[0]['waiter_called_at'])
+        self.assertFalse(response.data[1]['waiter_called'])
 
     def test_user_without_view_order_cannot_see_summary(self) -> None:
         self.client.force_authenticate(create_member())

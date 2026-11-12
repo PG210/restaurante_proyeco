@@ -60,7 +60,8 @@ def close_table(table: Table) -> Table:
     table.is_open = False
     table.opened_at = None
     table.bill_requested_at = None
-    table.save(update_fields=['is_open', 'opened_at', 'bill_requested_at'])
+    table.waiter_called_at = None
+    table.save(update_fields=['is_open', 'opened_at', 'bill_requested_at', 'waiter_called_at'])
     return table
 
 
@@ -82,4 +83,19 @@ def request_bill(table: Table) -> Table:
 def attend_bill_request(table: Table) -> Table:
     table.bill_requested_at = None
     table.save(update_fields=['bill_requested_at'])
+    return table
+
+
+def call_waiter(table: Table) -> Table:
+    if not table.is_open:
+        raise TableClosedError
+    if table.waiter_called_at is None:
+        table.waiter_called_at = timezone.now()
+        table.save(update_fields=['waiter_called_at'])
+    return table
+
+
+def attend_waiter_call(table: Table) -> Table:
+    table.waiter_called_at = None
+    table.save(update_fields=['waiter_called_at'])
     return table

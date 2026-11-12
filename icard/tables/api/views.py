@@ -13,6 +13,7 @@ from tables.permissions import ATTEND_BILL_REQUEST, OPEN_TABLE
 from tables.permissions import qualified_permission as qualified_table_permission
 from tables.services import (
     attend_bill_request,
+    attend_waiter_call,
     open_table,
     regenerate_token,
     tables_with_open_orders_summary,
@@ -51,6 +52,10 @@ class TableApiViewSet(ModelViewSet):
     @action(detail=True, methods=['post'], url_path='attend-bill', permission_classes=[CAN_ATTEND_BILLS])
     def attend_bill(self, request, pk=None):
         return self._table_response(attend_bill_request(self.get_object()))
+
+    @action(detail=True, methods=['post'], url_path='attend-waiter', permission_classes=[CAN_ATTEND_BILLS])
+    def attend_waiter(self, request, pk=None):
+        return self._table_response(attend_waiter_call(self.get_object()))
 
     @action(detail=True, methods=['post'], url_path='regenerate-token', permission_classes=[IsAdminUser])
     def regenerate_token(self, request, pk=None):

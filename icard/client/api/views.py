@@ -10,6 +10,7 @@ from client.api.throttles import (
     ClientTableBillThrottle,
     ClientTableOrderThrottle,
     ClientTableReadThrottle,
+    ClientTableWaiterThrottle,
 )
 from client.services import ClientOrderLimitError, create_client_orders, open_orders_for_table
 from products.stock import InsufficientStockError
@@ -17,6 +18,7 @@ from tables.models import Table
 from tables.services import (
     TableClosedError,
     TableNotFoundError,
+    call_waiter,
     get_open_table_by_token,
     get_table_by_token,
     request_bill,
@@ -85,4 +87,12 @@ class ClientBillView(ClientApiView):
 
     def post(self, request, token: str):
         table = request_bill(self.get_open_table(token))
+        return Response(ClientTableSerializer(table).data)
+
+
+class ClientWaiterView(ClientApiView):
+    throttle_by_method = {'POST': ClientTableWaiterThrottle}
+
+    def post(self, request, token: str):
+        table = call_waiter(self.get_open_table(token))
         return Response(ClientTableSerializer(table).data)

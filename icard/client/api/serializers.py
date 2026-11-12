@@ -10,11 +10,12 @@ from tables.models import Table
 
 class ClientTableSerializer(serializers.ModelSerializer):
     bill_requested = serializers.BooleanField(read_only=True)
+    waiter_called = serializers.BooleanField(read_only=True)
     payment_mode = serializers.SerializerMethodField()
 
     class Meta:
         model = Table
-        fields = ['number', 'is_open', 'bill_requested', 'payment_mode']
+        fields = ['number', 'is_open', 'bill_requested', 'waiter_called', 'payment_mode']
 
     def get_payment_mode(self, table: Table) -> str:
         return get_settings().payment_mode

@@ -26,6 +26,10 @@ class ClientTableBillThrottle(ClientTableThrottle):
     scope = 'client_bill'
 
 
+class ClientTableWaiterThrottle(ClientTableThrottle):
+    scope = 'client_waiter'
+
+
 class ClientIpThrottle(SimpleRateThrottle):
     scope = 'client_ip'
 

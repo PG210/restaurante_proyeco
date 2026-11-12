@@ -40,7 +40,7 @@ PERMISSION_LABELS = {
     DELIVER_ORDER: 'Marcar pedidos entregados',
     CANCEL_ORDER: 'Cancelar pedidos',
     OPEN_TABLE: 'Abrir y cerrar mesas',
-    ATTEND_BILL_REQUEST: 'Atender pedidos de cuenta',
+    ATTEND_BILL_REQUEST: 'Atender llamadas de mesa (cuenta y mesero)',
     CHARGE_BILL: 'Cobrar cuentas',
     VIEW_PAYMENTS: 'Ver historial de pagos',
     CLOSE_CASH_REGISTER: 'Cerrar la caja',

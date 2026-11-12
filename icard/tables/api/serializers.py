@@ -2,16 +2,17 @@ from rest_framework import serializers
 
 from tables.models import Table
 
-TABLE_STATE_FIELDS = ['is_open', 'opened_at', 'bill_requested']
+TABLE_STATE_FIELDS = ['is_open', 'opened_at', 'bill_requested', 'waiter_called', 'waiter_called_at']
 
 
 class TableSerializer(serializers.ModelSerializer):
     bill_requested = serializers.BooleanField(read_only=True)
+    waiter_called = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Table
         fields = ['id', 'number', *TABLE_STATE_FIELDS]
-        read_only_fields = ['is_open', 'opened_at']
+        read_only_fields = ['is_open', 'opened_at', 'waiter_called_at']
 
 
 class TableAdminSerializer(TableSerializer):
@@ -26,6 +27,7 @@ class TableSummarySerializer(serializers.ModelSerializer):
     preparing = serializers.IntegerField(read_only=True)
     ready = serializers.IntegerField(read_only=True)
     bill_requested = serializers.BooleanField(read_only=True)
+    waiter_called = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Table
@@ -34,6 +36,8 @@ class TableSummarySerializer(serializers.ModelSerializer):
             'number',
             'is_open',
             'bill_requested',
+            'waiter_called',
+            'waiter_called_at',
             'awaiting_payment',
             'pending',
             'preparing',

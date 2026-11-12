@@ -9,6 +9,7 @@ class Table(models.Model):
     is_open = models.BooleanField(default=False)
     opened_at = models.DateTimeField(null=True, blank=True)
     bill_requested_at = models.DateTimeField(null=True, blank=True)
+    waiter_called_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         permissions = [
@@ -27,6 +28,10 @@ class Table(models.Model):
     @property
     def bill_requested(self) -> bool:
         return self.bill_requested_at is not None
+
+    @property
+    def waiter_called(self) -> bool:
+        return self.waiter_called_at is not None
 
     def __str__(self):
         return str(self.number)

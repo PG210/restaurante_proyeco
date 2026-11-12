@@ -58,7 +58,14 @@ class ClientTableAccessTests(ClientApiTestCase):
         response = self.client.get(client_url(self.table.token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data, {'number': 5, 'is_open': True, 'bill_requested': False, 'payment_mode': 'POSTPAID'}
+            response.data,
+            {
+                'number': 5,
+                'is_open': True,
+                'bill_requested': False,
+                'waiter_called': False,
+                'payment_mode': 'POSTPAID',
+            },
         )
 
     def test_unknown_token_returns_404(self) -> None:
@@ -180,6 +187,29 @@ class ClientBillTests(ClientApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class ClientWaiterCallTests(ClientApiTestCase):
+    def test_calls_the_waiter(self) -> None:
+        response = self.client.post(client_url(self.table.token, 'call-waiter'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['waiter_called'])
+        self.assertFalse(response.data['bill_requested'])
+
+    def test_calling_twice_keeps_the_first_time(self) -> None:
+        self.client.post(client_url(self.table.token, 'call-waiter'))
+        first_called_at = Table.objects.get(pk=self.table.pk).waiter_called_at
+        self.client.post(client_url(self.table.token, 'call-waiter'))
+        self.assertEqual(Table.objects.get(pk=self.table.pk).waiter_called_at, first_called_at)
+
+    def test_closed_table_cannot_call_the_waiter(self) -> None:
+        response = self.client.post(client_url(self.closed_table.token, 'call-waiter'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIsNone(Table.objects.get(pk=self.closed_table.pk).waiter_called_at)
+
+    def test_unknown_table_cannot_call_the_waiter(self) -> None:
+        response = self.client.post(client_url(uuid.uuid4(), 'call-waiter'))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class ClientThrottlingTests(ClientApiTestCase):
     def test_orders_are_throttled_per_table(self) -> None:
         with throttle_rates(client_order='2/min'):
@@ -219,6 +249,14 @@ class ClientThrottlingTests(ClientApiTestCase):
             self.client.post(client_url(self.table.token, 'bill'))
             response = self.client.post(client_url(self.table.token, 'bill'))
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_waiter_calls_are_throttled_per_table(self) -> None:
+        with throttle_rates(client_waiter='1/min'):
+            self.client.post(client_url(self.table.token, 'call-waiter'))
+            throttled = self.client.post(client_url(self.table.token, 'call-waiter'))
+            other_table = self.client.post(client_url(self.other_table.token, 'call-waiter'))
+        self.assertEqual(throttled.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(other_table.status_code, status.HTTP_200_OK)
 
     def test_unknown_tokens_are_throttled_by_ip(self) -> None:
         with throttle_rates(client_ip='2/min'):

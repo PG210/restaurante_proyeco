@@ -116,6 +116,7 @@ REST_FRAMEWORK = {
         'client_read': env_str('CLIENT_READ_RATE', default='60/min'),
         'client_order': env_str('CLIENT_ORDER_RATE', default='10/min'),
         'client_bill': env_str('CLIENT_BILL_RATE', default='3/min'),
+        'client_waiter': env_str('CLIENT_WAITER_RATE', default='3/min'),
         'client_ip': env_str('CLIENT_IP_RATE', default='300/min'),
     },
     'NUM_PROXIES': env_int('NUM_PROXIES', default=0),
