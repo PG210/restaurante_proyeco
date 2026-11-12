@@ -11,9 +11,11 @@ from reports.csv_export import csv_response
 from reports.dashboard import dashboard
 from reports.exports import REPORTS
 from reports.ranges import ReportRange, ReportRangeError, report_range
+from reports.xlsx_export import xlsx_response
 
 EXPORT_PARAM = 'export'
 CSV_EXPORT = 'csv'
+XLSX_EXPORT = 'xlsx'
 DATE_PARAMS = {'from': 'desde', 'to': 'hasta'}
 
 
@@ -44,7 +46,7 @@ def _range_from(params: QueryDict, today: datetime.date) -> ReportRange:
 
 
 class SalesReportView(APIView):
-    """One sales report for `?from=&to=` (service days); `&export=csv` downloads it."""
+    """One report for `?from=&to=` (service days); `&export=csv` or `&export=xlsx` downloads it."""
 
     permission_classes = [IsAdminUser]
     report_key = ''
@@ -53,8 +55,11 @@ class SalesReportView(APIView):
         report = REPORTS[self.report_key]
         today = current_service_day()
         selected = _range_from(request.query_params, today)
-        if request.query_params.get(EXPORT_PARAM) == CSV_EXPORT:
-            header, rows = report.export(selected)
-            return csv_response(report.filename(selected), header, rows)
+        export = request.query_params.get(EXPORT_PARAM)
+        if export == CSV_EXPORT:
+            table = report.export(selected)
+            return csv_response(report.filename(selected, CSV_EXPORT), table.header, table.rows)
+        if export == XLSX_EXPORT:
+            return xlsx_response(report.filename(selected, XLSX_EXPORT), report.export(selected))
         data = report.build(selected)
         return Response({**data, 'range': {**data['range'], 'today': today}})

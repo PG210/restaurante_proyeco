@@ -6,6 +6,7 @@ formula; numbers are written by the system and stay numbers.
 """
 
 import csv
+import datetime
 import io
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
@@ -17,13 +18,16 @@ DELIMITER = ';'
 DECIMAL_SEPARATOR = ','
 FORMULA_PREFIXES = ('=', '+', '-', '@', '\t', '\r')
 FORMULA_ESCAPE = "'"
+DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 
-Cell = str | int | Decimal | None
+Cell = str | int | Decimal | datetime.datetime | None
 
 
 def safe_cell(value: Cell) -> str:
     if value is None:
         return ''
+    if isinstance(value, datetime.datetime):
+        return value.strftime(DATETIME_FORMAT)
     if isinstance(value, bool):
         return 'Sí' if value else 'No'
     if isinstance(value, Decimal):

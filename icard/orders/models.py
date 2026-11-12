@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 ORDER_TEXT_MAX_LENGTH = 255
 MIN_ORDER_QUANTITY = 1
@@ -70,3 +71,31 @@ class OrderModifier(models.Model):
 
     def __str__(self):
         return f'{self.group_name}: {self.modifier_name}'
+
+
+class ImmutableStatusChangeError(Exception):
+    pass
+
+
+class OrderStatusChange(models.Model):
+    """One status change of an order: when the kitchen took it, finished it, who cancelled it."""
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_changes')
+    from_status = models.CharField(max_length=32, choices=OrderStatus.choices, blank=True, default='')
+    to_status = models.CharField(max_length=32, choices=OrderStatus.choices)
+    changed_at = models.DateTimeField(default=timezone.now)
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+
+    class Meta:
+        ordering = ('changed_at', 'id')
+        indexes = [models.Index(fields=['to_status', 'changed_at'], name='order_change_status_idx')]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ImmutableStatusChangeError('El historial de un pedido no se modifica.')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Pedido {self.order_id}: {self.from_status or "nuevo"} -> {self.to_status}'

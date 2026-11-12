@@ -9,10 +9,10 @@ Orders do not keep the product name or category, so the current ones are shown.
 
 from decimal import Decimal
 
-from django.db.models import BooleanField, Count, ExpressionWrapper, Q, QuerySet, Sum
+from django.db.models import BooleanField, Count, ExpressionWrapper, Prefetch, Q, QuerySet, Sum
 from django.db.models.functions import Coalesce, ExtractHour, ExtractIsoWeekDay, Lower, Trim
 
-from orders.models import Order, OrderStatus
+from orders.models import Order, OrderStatus, OrderStatusChange
 from payments.api.serializers import user_display_name
 from payments.models import ZERO, Payment
 from payments.services import LINE_TOTAL
@@ -261,7 +261,18 @@ def cancellations_report(report_range: ReportRange, latest_limit: int | None = L
         .annotate(count=Count('id'), units=Sum('quantity'), amount=Sum(LINE_TOTAL))
         .order_by('-count', 'product__title')
     )
-    latest = cancelled.select_related('product', 'table', 'created_by').order_by('-created_at', '-id')
+    cancellation = Prefetch(
+        'status_changes',
+        queryset=OrderStatusChange.objects.filter(to_status=OrderStatus.CANCELLED).select_related(
+            'changed_by'
+        ),
+        to_attr='cancellations',
+    )
+    latest = (
+        cancelled.select_related('product', 'table', 'created_by')
+        .prefetch_related(cancellation)
+        .order_by('-created_at', '-id')
+    )
     return {
         'range': _range_info(report_range),
         'count': sum(row['count'] for row in reasons),
@@ -295,6 +306,8 @@ def _reason_label(reason_key: str) -> str:
 
 
 def _cancelled_order(order: Order) -> dict:
+    """Who cancelled and when is only known for orders cancelled since phase 7c."""
+    change = order.cancellations[-1] if order.cancellations else None
     return {
         'id': order.id,
         'created_at': order.created_at,
@@ -304,4 +317,6 @@ def _cancelled_order(order: Order) -> dict:
         'amount': _money(order.price * order.quantity if order.price is not None else None),
         'reason': order.cancel_reason or NO_REASON,
         'placed_by': user_display_name(order.created_by) or MENU_CUSTOMER,
+        'cancelled_at': change.changed_at if change else None,
+        'cancelled_by': user_display_name(change.changed_by) if change else None,
     }

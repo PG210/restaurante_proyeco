@@ -1,4 +1,5 @@
 import datetime
+import io
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -6,13 +7,14 @@ from django.db import connection
 from django.test import SimpleTestCase
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
+from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from categories.models import Category
 from configuration.business_day import business_day_start_hour, forget_business_day_start_hour
 from icard.testing import create_admin, create_member, create_role_member, seed_roles
-from orders.models import Order, OrderStatus
+from orders.models import Order, OrderStatus, OrderStatusChange
 from payments.models import Bill, Payment, PaymentMethod
 from products.models import Product
 from reports import sales
@@ -312,6 +314,8 @@ class CancellationsReportTests(SalesReportTestCase):
                 'amount': '40000.00',
                 'reason': 'Sin pan',
                 'placed_by': 'Cliente (carta QR)',
+                'cancelled_at': None,
+                'cancelled_by': None,
             },
         )
         self.assertEqual(len(sales.cancellations_report(WEEK, latest_limit=1)['latest']), 1)
@@ -330,7 +334,7 @@ class SalesReportApiTests(SalesReportTestCase):
     def test_admin_gets_each_report_with_its_range(self) -> None:
         self._order(self.coffee, '3000.00', when=timezone.now())
 
-        for path in ('products', 'categories', 'hours', 'staff', 'cancellations'):
+        for path in ('products', 'categories', 'hours', 'staff', 'cancellations', 'kitchen'):
             with self.subTest(path=path):
                 response = self._get(path)
 
@@ -389,6 +393,37 @@ class SalesReportApiTests(SalesReportTestCase):
         self.assertEqual(len(lines), sales.LATEST_CANCELLATIONS + 2)
         self.assertTrue(lines[1].startswith('2026-11-11 20:15;4;Café;1;3000,00;Sin motivo;'))
 
+    def test_downloads_the_report_as_excel(self) -> None:
+        self._order(self.coffee, '3000.50', when=at(datetime.date(2026, 10, 1), 20))
+
+        response = self._get('products', **{'from': '2026-10-01', 'to': '2026-10-07', 'export': 'xlsx'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="reporte-productos-2026-10-01-a-2026-10-07.xlsx"',
+        )
+        sheet = load_workbook(io.BytesIO(response.content)).active
+        self.assertEqual([cell.value for cell in sheet[2]], ['Café', 'Bebidas', 1, 3000.5, 100])
+
+    def test_cancellations_say_who_cancelled_and_when(self) -> None:
+        order = self._order(self.coffee, '3000.00', status_=OrderStatus.CANCELLED)
+        OrderStatusChange.objects.create(
+            order=order,
+            from_status=OrderStatus.PENDING,
+            to_status=OrderStatus.CANCELLED,
+            changed_at=at(TODAY, 20, 30),
+            changed_by=self.admin,
+        )
+
+        [row] = self._get('cancellations').data['latest']
+
+        self.assertEqual(row['cancelled_at'], at(TODAY, 20, 30))
+        self.assertEqual(row['cancelled_by'], 'admin@example.com')
+
     def test_the_number_of_queries_does_not_grow_with_the_data(self) -> None:
         def count_queries(path: str) -> int:
             with CaptureQueriesContext(connection) as queries:
@@ -399,7 +434,7 @@ class SalesReportApiTests(SalesReportTestCase):
         self._order(self.coffee, '3000.00', when=timezone.now(), status_=OrderStatus.CANCELLED)
         before = {
             path: count_queries(path)
-            for path in ('products', 'categories', 'hours', 'staff', 'cancellations')
+            for path in ('products', 'categories', 'hours', 'staff', 'cancellations', 'kitchen')
         }
         for product in (self.juice, self.burger, self._product('Pan', None)):
             self._order(product, '1000.00', when=timezone.now(), created_by=create_member(product.title))

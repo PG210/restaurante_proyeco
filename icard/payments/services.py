@@ -8,7 +8,8 @@ from django.utils import timezone
 
 from configuration.models import PaymentMode
 from configuration.services import get_settings
-from orders.models import KITCHEN_STATUSES, OrderStatus
+from orders.history import record_status_changes
+from orders.models import KITCHEN_STATUSES, Order, OrderStatus
 from payments.models import Bill, BillStatus, Payment
 from payments.tax import split_included_tax, to_money
 from tables.models import Table
@@ -182,7 +183,13 @@ def _charge_prepaid(bill: Bill, request: ChargeRequest, user: User) -> None:
         )
     payment = _record_payment(bill, request, user)
     now = timezone.now()
-    orders.update(status=OrderStatus.PENDING, payment=payment, kitchen_at=now, updated_at=now)
+    order_ids = list(orders.values_list('pk', flat=True))
+    record_status_changes(
+        ((order_id, OrderStatus.AWAITING_PAYMENT) for order_id in order_ids), OrderStatus.PENDING, user, now
+    )
+    Order.objects.filter(pk__in=order_ids).update(
+        status=OrderStatus.PENDING, payment=payment, kitchen_at=now, updated_at=now
+    )
 
 
 def _record_payment(bill: Bill, request: ChargeRequest, user: User) -> Payment:
@@ -215,7 +222,7 @@ def reverse_payment(payment: Payment, reason: str, user: User) -> Payment:
             raise PaymentReversalError('Una anulación no se puede anular.')
         if Payment.objects.filter(reverses=original).exists():
             raise PaymentReversalError('Este pago ya fue anulado.')
-        _release_prepaid_orders(original)
+        _release_prepaid_orders(original, user)
         reversal = Payment.objects.create(
             bill=locked_bill,
             method=original.method,
@@ -231,12 +238,17 @@ def reverse_payment(payment: Payment, reason: str, user: User) -> Payment:
         return reversal
 
 
-def _release_prepaid_orders(payment: Payment) -> None:
+def _release_prepaid_orders(payment: Payment, user: User) -> None:
     covered_orders = payment.covered_orders.select_for_update()
     if covered_orders.exclude(status=OrderStatus.PENDING).exists():
         raise PaymentReversalError('La cocina ya empezó algún pedido de este cobro; no se puede anular.')
-    covered_orders.update(
-        status=OrderStatus.AWAITING_PAYMENT, payment=None, kitchen_at=None, updated_at=timezone.now()
+    now = timezone.now()
+    order_ids = list(covered_orders.values_list('pk', flat=True))
+    record_status_changes(
+        ((order_id, OrderStatus.PENDING) for order_id in order_ids), OrderStatus.AWAITING_PAYMENT, user, now
+    )
+    Order.objects.filter(pk__in=order_ids).update(
+        status=OrderStatus.AWAITING_PAYMENT, payment=None, kitchen_at=None, updated_at=now
     )
 
 
