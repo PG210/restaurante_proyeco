@@ -6,9 +6,11 @@ export const MODIFIERS_PATH = "/admin/modifiers";
 export const LABELS_PATH = "/admin/labels";
 export const DASHBOARD_PATH = "/admin/dashboard";
 export const CASH_CLOSING_PATH = "/admin/cash-closing";
+export const REPORTS_PATH = "/admin/reports";
 
 export const ADMIN_SECTIONS = {
   dashboard: { path: DASHBOARD_PATH, label: "Resumen", icon: "chart line", adminOnly: true },
+  reports: { path: REPORTS_PATH, label: "Reportes", icon: "chart bar", adminOnly: true },
   orders: {
     path: ADMIN_HOME_PATH,
     label: "Pedidos",

@@ -12,6 +12,7 @@ import {
   PaymentsHistory,
   PermissionsAdmin,
   ProductAdmin,
+  ReportsAdmin,
   SettingsAdmin,
   TableDetailsAdmin,
   TablesAdmin,
@@ -22,6 +23,7 @@ import { ADMIN_SECTIONS } from "../utils/adminSections";
 
 const routesAdmin = [
   { ...ADMIN_SECTIONS.dashboard, layout: AdminLayout, component: DashboardAdmin },
+  { ...ADMIN_SECTIONS.reports, layout: AdminLayout, component: ReportsAdmin },
   { ...ADMIN_SECTIONS.orders, layout: AdminLayout, component: OrdersAdmin },
   { ...ADMIN_SECTIONS.tableDetail, layout: AdminLayout, component: TableDetailsAdmin },
   { ...ADMIN_SECTIONS.kitchen, layout: AdminLayout, component: KitchenAdmin },

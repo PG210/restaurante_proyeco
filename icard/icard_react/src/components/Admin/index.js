@@ -14,3 +14,4 @@ export * from "./Stock";
 export * from "./Modifier";
 export * from "./ProductLabel";
 export * from "./CashClosing";
+export * from "./Reports";

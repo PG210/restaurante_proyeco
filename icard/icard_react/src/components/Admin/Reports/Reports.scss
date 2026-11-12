@@ -1,0 +1,54 @@
+$report-blue: 33, 133, 208;
+
+.report-note {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9em;
+}
+
+.report-bar {
+  position: relative;
+  min-width: 8em;
+
+  &__fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba($report-blue, 0.18);
+    border-radius: 2px;
+  }
+
+  &__text {
+    position: relative;
+    padding-left: 0.3em;
+  }
+}
+
+.hours-heatmap {
+  overflow-x: auto;
+
+  &__cell--1 {
+    background: rgba($report-blue, 0.15) !important;
+  }
+
+  &__cell--2 {
+    background: rgba($report-blue, 0.35) !important;
+  }
+
+  &__cell--3 {
+    background: rgba($report-blue, 0.6) !important;
+  }
+
+  &__cell--4 {
+    background: rgba($report-blue, 0.85) !important;
+    color: #fff;
+  }
+}
+
+.reports-admin__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5em 1em;
+  margin-bottom: 1em;
+}

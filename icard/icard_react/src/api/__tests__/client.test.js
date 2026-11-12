@@ -1,4 +1,4 @@
-import { ApiError, apiRequest, setSessionExpiredHandler } from "../client";
+import { ApiError, apiDownload, apiRequest, setSessionExpiredHandler } from "../client";
 import { getRefreshToken, getToken, setTokens } from "../token";
 import { BASE_API } from "../../utils/constants";
 
@@ -165,5 +165,35 @@ describe("apiRequest", () => {
       status: 429,
       retryAfterSeconds: null,
     });
+  });
+});
+
+describe("apiDownload", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    global.fetch = jest.fn();
+  });
+
+  it("returns the file with the name the server gave it", async () => {
+    setTokens({ access: "access-1", refresh: "refresh-1" });
+    const blob = new Blob(["a;b"]);
+    global.fetch.mockResolvedValueOnce({
+      status: 200,
+      ok: true,
+      headers: new Headers({ "Content-Disposition": 'attachment; filename="reporte-horas.csv"' }),
+      blob: async () => blob,
+    });
+
+    const result = await apiDownload("/api/reports/hours/?export=csv");
+
+    expect(result).toEqual({ blob, filename: "reporte-horas.csv" });
+    expect(requestHeaders(0)).toEqual({ Authorization: "Bearer access-1" });
+  });
+
+  it("throws the server message when the download fails", async () => {
+    setTokens({ access: "access-1", refresh: "refresh-1" });
+    global.fetch.mockResolvedValueOnce(mockResponse(400, { detail: "Rango inválido." }));
+
+    await expect(apiDownload("/api/reports/hours/?export=csv")).rejects.toThrow("Rango inválido.");
   });
 });

@@ -16,3 +16,4 @@ export * from "./ModifiersAdmin";
 export * from "./LabelsAdmin";
 export * from "./DashboardAdmin";
 export * from "./CashClosingAdmin";
+export * from "./ReportsAdmin";

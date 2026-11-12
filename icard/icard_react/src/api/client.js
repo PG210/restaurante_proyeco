@@ -130,3 +130,13 @@ export async function apiRequest(path, { method = "GET", body, auth = true } = {
   if (!response.ok) throw buildApiError(response, data);
   return data;
 }
+
+const FILENAME_PATTERN = /filename="([^"]+)"/;
+
+/** Downloads a file (with the session token) and returns it with the name the server gave it. */
+export async function apiDownload(path) {
+  const response = await sendWithRefresh(path, { method: "GET", auth: true });
+  if (!response.ok) throw buildApiError(response, await parseBody(response).catch(() => null));
+  const disposition = response.headers?.get?.("Content-Disposition") ?? "";
+  return { blob: await response.blob(), filename: FILENAME_PATTERN.exec(disposition)?.[1] ?? "reporte.csv" };
+}
