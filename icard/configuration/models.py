@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -9,6 +10,7 @@ RATE_MAX_DIGITS = 5
 RATE_DECIMAL_PLACES = 2
 SETTINGS_FIELD_MAX_LENGTH = 32
 SETTINGS_VALUE_MAX_LENGTH = 64
+LAST_HOUR_OF_DAY = 23
 
 
 class PaymentMode(models.TextChoices):
@@ -35,6 +37,10 @@ def _valid_rate(prefix: str) -> Q:
     )
 
 
+def default_business_day_start_hour() -> int:
+    return settings.BUSINESS_DAY_START_HOUR
+
+
 class RestaurantSettings(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=SETTINGS_ID, editable=False)
     charge_inc = models.BooleanField(default=False)
@@ -42,6 +48,9 @@ class RestaurantSettings(models.Model):
     charge_iva = models.BooleanField(default=False)
     iva_rate = rate_field(null=True, blank=True)
     payment_mode = models.CharField(max_length=16, choices=PaymentMode.choices, default=PaymentMode.POSTPAID)
+    business_day_start_hour = models.PositiveSmallIntegerField(
+        default=default_business_day_start_hour, validators=[MaxValueValidator(LAST_HOUR_OF_DAY)]
+    )
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'

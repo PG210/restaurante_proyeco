@@ -38,6 +38,7 @@ class RestaurantSettingsSerializer(serializers.ModelSerializer):
             'charge_iva',
             'iva_rate',
             'payment_mode',
+            'business_day_start_hour',
             'updated_at',
             'updated_by_name',
         ]

@@ -6,6 +6,7 @@ from django.test.utils import CaptureQueriesContext
 from rest_framework import status
 
 from categories.models import Category
+from configuration.business_day import business_day_start_hour
 from icard.testing import MediaTestCase, create_admin, create_role_member, make_image, seed_roles
 from orders.models import Order, OrderModifier
 from payments.models import Bill
@@ -180,6 +181,8 @@ class MenuTests(ModifierTestCase):
         )
 
     def test_menu_does_not_query_per_product(self) -> None:
+        business_day_start_hour()  # cached once, as in production, so it does not skew the counts
+
         def count_queries() -> int:
             with CaptureQueriesContext(connection) as queries:
                 self.client.get(PRODUCTS_URL)

@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from configuration.models import PaymentMode, TaxType, rate_field
 
@@ -102,3 +103,59 @@ class Payment(models.Model):
 
     def __str__(self):
         return f'Pago {self.pk} ({self.get_method_display()} {self.amount})'
+
+
+class ImmutableCashClosingError(Exception):
+    pass
+
+
+class CashClosing(models.Model):
+    """Daily cash count. The expected amounts are frozen when it is saved and never recalculated."""
+
+    service_day = models.DateField()
+    opening_float = money_field(default=ZERO)
+    note = models.CharField(max_length=PAYMENT_REASON_MAX_LENGTH, blank=True, default='')
+    closed_at = models.DateTimeField(default=timezone.now)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+    voided_at = models.DateTimeField(null=True, blank=True)
+    voided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+    void_reason = models.CharField(max_length=PAYMENT_REASON_MAX_LENGTH, blank=True, default='')
+
+    class Meta:
+        ordering = ('-service_day', '-closed_at', '-id')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['service_day'], condition=Q(voided_at__isnull=True), name='one_cash_closing_per_day'
+            ),
+            models.CheckConstraint(check=Q(opening_float__gte=0), name='cash_closing_float_not_negative'),
+        ]
+        permissions = [('close_cash_register', 'Puede cerrar la caja')]
+
+    def __str__(self):
+        return f'Cierre de caja {self.service_day}'
+
+
+class CashClosingLine(models.Model):
+    closing = models.ForeignKey(CashClosing, on_delete=models.CASCADE, related_name='lines')
+    method = models.CharField(max_length=16, choices=PaymentMethod.choices)
+    expected = money_field()
+    counted = money_field()
+    difference = money_field()
+
+    class Meta:
+        ordering = ('id',)
+        constraints = [
+            models.UniqueConstraint(fields=['closing', 'method'], name='one_cash_closing_line_per_method'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ImmutableCashClosingError('Los cierres de caja no se modifican; anula el cierre.')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.get_method_display()}: {self.difference}'

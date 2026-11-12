@@ -2,13 +2,21 @@ import logging
 
 from django.db import transaction
 
+from configuration.business_day import forget_business_day_start_hour
 from configuration.models import SETTINGS_ID, RestaurantSettings, SettingsChange
 from payments.models import Bill, BillStatus
 from users.models import User
 
 logger = logging.getLogger(__name__)
 
-EDITABLE_FIELDS = ('charge_inc', 'inc_rate', 'charge_iva', 'iva_rate', 'payment_mode')
+EDITABLE_FIELDS = (
+    'charge_inc',
+    'inc_rate',
+    'charge_iva',
+    'iva_rate',
+    'payment_mode',
+    'business_day_start_hour',
+)
 
 
 class SettingsConflictError(Exception):
@@ -51,6 +59,8 @@ def update_settings(changes: dict, user: User) -> RestaurantSettings:
         locked.updated_by = user
         locked.save()
         SettingsChange.objects.bulk_create(history)
+        transaction.on_commit(forget_business_day_start_hour)
+    forget_business_day_start_hour()
     for change in history:
         logger.info('Configuración %s: %s -> %s.', change.field, change.old_value, change.new_value)
     return locked

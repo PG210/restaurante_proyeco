@@ -8,13 +8,19 @@ from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import override_settings
 from PIL import Image
 from rest_framework import status
 
 from categories.models import Category
 from icard.media import MAX_IMAGE_BYTES, MAX_IMAGE_SIDE
-from icard.testing import MediaTestCase, create_admin, create_role_member, make_image, seed_roles
+from icard.testing import (
+    MediaTestCase,
+    create_admin,
+    create_role_member,
+    make_image,
+    seed_roles,
+    set_business_day_start_hour,
+)
 from orders.models import Order
 from products.models import Product
 from products.service_day import current_service_day
@@ -69,12 +75,12 @@ class ServiceDayTests(MediaTestCase):
     def test_service_day_starts_at_five_in_the_morning(self) -> None:
         self.assertEqual(current_service_day(at_bogota(11, 5)), datetime.date(2026, 11, 11))
 
-    @override_settings(BUSINESS_DAY_START_HOUR=0)
     def test_utc_midnight_does_not_change_the_day_in_bogota(self) -> None:
+        set_business_day_start_hour(self, 0)
         self.assertEqual(current_service_day(at_bogota(10, 20)), datetime.date(2026, 11, 10))
 
-    @override_settings(BUSINESS_DAY_START_HOUR=0)
     def test_start_hour_is_configurable(self) -> None:
+        set_business_day_start_hour(self, 0)
         self.assertEqual(current_service_day(at_bogota(11, 2)), datetime.date(2026, 11, 11))
 
 

@@ -9,6 +9,8 @@ from django.test import override_settings
 from PIL import Image
 from rest_framework.test import APITestCase
 
+from configuration.business_day import forget_business_day_start_hour
+from configuration.models import SETTINGS_ID, RestaurantSettings
 from users.models import User
 
 TEST_PASSWORD = 'Test-pass-123'
@@ -35,6 +37,13 @@ def create_role_member(role: str) -> User:
     user = create_member(role)
     user.groups.add(Group.objects.get(name=role))
     return user
+
+
+def set_business_day_start_hour(test_case, hour: int) -> None:
+    """Changes the hour the working day starts and forgets it again when the test ends."""
+    RestaurantSettings.objects.update_or_create(pk=SETTINGS_ID, defaults={'business_day_start_hour': hour})
+    forget_business_day_start_hour()
+    test_case.addCleanup(forget_business_day_start_hour)
 
 
 def make_image(name: str = 'test.png') -> SimpleUploadedFile:

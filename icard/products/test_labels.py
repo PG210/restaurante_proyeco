@@ -7,6 +7,7 @@ from django.test.utils import CaptureQueriesContext
 from rest_framework import status
 
 from categories.models import Category
+from configuration.business_day import business_day_start_hour
 from icard.testing import MediaTestCase, create_admin, create_role_member, make_image, seed_roles
 from orders.models import Order
 from products.models import Allergen, Product, Tag
@@ -161,6 +162,10 @@ class AssignLabelsTests(LabelTestCase):
 
 
 class QueryCountTests(LabelTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        business_day_start_hour()  # cached once, as in production, so it does not skew the counts
+
     def _count_queries(self, url: str) -> int:
         with CaptureQueriesContext(connection) as queries:
             self.client.get(url)
