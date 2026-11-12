@@ -1,5 +1,6 @@
 import {
   NOTIFICATION_TYPE,
+  alertKeys,
   buildNotifications,
   hasOrderNotifications,
   isAfter,
@@ -104,5 +105,33 @@ describe("notification helpers", () => {
   it("detects when there are order notifications to mark as read", () => {
     expect(hasOrderNotifications([{ type: NOTIFICATION_TYPE.BILL }])).toBe(false);
     expect(hasOrderNotifications([{ type: NOTIFICATION_TYPE.ORDER }])).toBe(true);
+  });
+});
+
+describe("waiter calls", () => {
+  const CALLED_AT = "2026-11-09T12:00:00Z";
+  const NOW = new Date("2026-11-09T12:03:30Z").getTime();
+  const calling = { id: 3, number: 9, bill_requested: true, waiter_called: true, waiter_called_at: CALLED_AT };
+
+  it("says how long the table has been waiting and comes first", () => {
+    const notifications = buildNotifications([], [calling], LAST_SEEN, { now: NOW });
+
+    expect(notifications.map((notification) => notification.text)).toEqual([
+      "Mesa 9 llama al mesero (hace 3 min)",
+      "Mesa 9 pide la cuenta",
+    ]);
+    expect(notifications[0]).toMatchObject({ type: NOTIFICATION_TYPE.WAITER, tableId: 3 });
+  });
+
+  it("rings for guest events only, with the time in the key", () => {
+    const notifications = [
+      { key: "waiter-3", type: NOTIFICATION_TYPE.WAITER, createdAt: CALLED_AT },
+      { key: "bill-3", type: NOTIFICATION_TYPE.BILL },
+      { key: "order-1", type: NOTIFICATION_TYPE.ORDER, createdAt: "2026-11-09T12:01:00Z" },
+      { key: "payment-1", type: NOTIFICATION_TYPE.PAYMENT },
+      { key: "stock-4", type: NOTIFICATION_TYPE.STOCK },
+    ];
+
+    expect(alertKeys(notifications)).toEqual([`waiter-3@${CALLED_AT}`, "bill-3@", "order-1@2026-11-09T12:01:00Z"]);
   });
 });

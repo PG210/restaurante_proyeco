@@ -65,6 +65,7 @@ export const DEFAULT_BULK_ADVANCE_LABEL = "Avanzar seleccionados";
 export const TABLE_STATE = {
   AWAITING_PAYMENT: "awaiting",
   BILL: "bill",
+  WAITER: "waiter",
   FREE: "free",
   PENDING: "pending",
   PREPARING: "preparing",
@@ -141,8 +142,16 @@ export function kitchenTiming(order, now) {
   return { waiting, estimate, overdue, late: overdue > 0 };
 }
 
-export function getTableState({ pending, preparing, ready, awaiting_payment: awaitingPayment, bill_requested: billRequested }) {
+export function getTableState({
+  pending,
+  preparing,
+  ready,
+  awaiting_payment: awaitingPayment,
+  bill_requested: billRequested,
+  waiter_called: waiterCalled,
+}) {
   if (billRequested) return TABLE_STATE.BILL;
+  if (waiterCalled) return TABLE_STATE.WAITER;
   if (ready > 0) return TABLE_STATE.READY;
   if (preparing > 0) return TABLE_STATE.PREPARING;
   if (pending > 0) return TABLE_STATE.PENDING;

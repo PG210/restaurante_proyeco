@@ -1,9 +1,9 @@
 import React from "react";
-import { Checkbox, Label } from "semantic-ui-react";
+import { Checkbox, Icon, Label } from "semantic-ui-react";
 import { ReactComponent as IcTable } from "../../../../assets/comedor.svg";
 import "./TableAdmin.scss";
 import { getTableState } from "../../../../utils/orderStatus";
-import { getTableBadges } from "../../../../utils/tableStatus";
+import { getTableBadges, waiterCallLabel } from "../../../../utils/tableStatus";
 
 export function TableAdmin({ table, onSelect, canToggleOpen = false, toggling = false, onToggleOpen }) {
   const closedClass = table.is_open ? "" : " table-admin--closed";
@@ -18,7 +18,12 @@ export function TableAdmin({ table, onSelect, canToggleOpen = false, toggling = 
         onClick={() => onSelect(table)}
       >
         <IcTable />
-        <p>Mesa {table.number}</p>
+        <p>
+          Mesa {table.number}
+          {table.waiter_called && (
+            <Icon name="bell" color="yellow" className="table-admin__bell" title={waiterCallLabel(table)} aria-hidden="true" />
+          )}
+        </p>
         <div className="table-admin__labels">
           {badges.map((badge) => (
             <Label key={badge.key} color={badge.color} basic={badge.basic}>

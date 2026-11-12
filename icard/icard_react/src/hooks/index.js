@@ -16,3 +16,4 @@ export * from "./useAvailabilityToggle";
 export * from "./useModifierGroup";
 export * from "./useMenuFilters";
 export * from "./useProductLabels";
+export * from "./useSoundAlerts";

@@ -19,6 +19,7 @@ export function useNotifications(user) {
   const [guestOrders, setGuestOrders] = useState([]);
   const [tablesSummary, setTablesSummary] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     writeJson(storageKey, lastSeen);
@@ -35,6 +36,7 @@ export function useNotifications(user) {
       setGuestOrders(orders);
       setTablesSummary(summary);
       setLowStockProducts(lowStock);
+      setLoaded(true);
     } catch (error) {
       notifyError(error);
     }
@@ -55,6 +57,7 @@ export function useNotifications(user) {
 
   return {
     enabled,
+    loaded,
     notifications: buildNotifications(guestOrders, tablesSummary, lastSeen, {
       includePayments: hasPermission(user, PERMISSIONS.CHARGE_BILL),
       lowStockProducts,

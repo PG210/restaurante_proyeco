@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Loader } from "semantic-ui-react";
 import { AddEditTableForm, HeaderPage, TableQr, TableTablesAdmin } from "../../components/Admin";
 import { ModalBasic, TableFilters } from "../../components/Common";
-import { useFormModal, useTable, useTableFilters } from "../../hooks";
+import { useFormModal, usePolling, useTable, useTableFilters } from "../../hooks";
 import { OPEN_OPTIONS, TABLE_FILTERS } from "../../utils/catalogFilters";
-import { ADMIN_SECTIONS } from "../../utils/adminSections";
+import { ADMIN_SECTIONS, tableDetailPath } from "../../utils/adminSections";
+import { ORDERS_POLL_MS } from "../../utils/constants";
 import { notifyError } from "../../utils/notify";
 
 const TABLE_SELECTS = [{ name: "open", label: "Estado", options: OPEN_OPTIONS }];
@@ -21,6 +22,9 @@ export function TablesAdmin() {
   useEffect(() => {
     loadTables();
   }, [loadTables]);
+
+  // Keeps waiter calls and bill requests up to date while the list is open.
+  usePolling(loadTables, ORDERS_POLL_MS);
 
   const addTable = () => {
     openModal("Nueva mesa", <AddEditTableForm onClose={closeModal} onRefetch={loadTables} />);
@@ -63,9 +67,10 @@ export function TablesAdmin() {
           <TableFilters state={tableFilters} selects={TABLE_SELECTS} searchPlaceholder="Buscar mesa por número" />
           <TableTablesAdmin
             tables={tableFilters.filtered}
-          updateTable={updateTable}
-          onDeleteTable={onDeleteTable}
+            updateTable={updateTable}
+            onDeleteTable={onDeleteTable}
             onShowQr={showQr}
+            onShowTable={(table) => navigate(tableDetailPath(table.id))}
           />
         </>
       )}

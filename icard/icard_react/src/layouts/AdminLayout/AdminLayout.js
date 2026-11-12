@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { LoginAdmin } from "../../pages/Admin";
 import { useAuth } from "../../hooks";
 import { TopMenu, LateralMenu } from "../../components/Admin";
+import { SoundProvider } from "../../context/SoundContext";
 import { landingPath } from "../../utils/adminSections";
 import "./AdminLayout.scss";
 
@@ -21,13 +22,15 @@ export function AdminLayout({ children }) {
   if (landing) return <Navigate to={landing} replace />;
 
   return (
-    <div className="admin-layout">
-      <div className="admin-layout__menu">
-        <TopMenu />
+    <SoundProvider>
+      <div className="admin-layout">
+        <div className="admin-layout__menu">
+          <TopMenu />
+        </div>
+        <div className="admin-layout__main-content">
+          <LateralMenu>{children}</LateralMenu>
+        </div>
       </div>
-      <div className="admin-layout__main-content">
-        <LateralMenu>{children}</LateralMenu>
-      </div>
-    </div>
+    </SoundProvider>
   );
 }

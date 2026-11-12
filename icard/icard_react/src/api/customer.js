@@ -14,6 +14,7 @@ export const customerApi = {
   createOrders: (token, items) =>
     apiRequest(customerPath(token, "orders"), { ...PUBLIC_REQUEST, method: "POST", body: { items } }),
   requestBill: (token) => apiRequest(customerPath(token, "bill"), { ...PUBLIC_REQUEST, method: "POST" }),
+  callWaiter: (token) => apiRequest(customerPath(token, "call-waiter"), { ...PUBLIC_REQUEST, method: "POST" }),
   getCategories: () => apiRequest("/api/categories/", PUBLIC_REQUEST),
   getAllergens: () => apiRequest("/api/allergens/", PUBLIC_REQUEST),
   getTags: () => apiRequest("/api/tags/", PUBLIC_REQUEST),

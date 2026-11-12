@@ -34,3 +34,20 @@ describe("table state with bill requests", () => {
     expect(getTableState({ ...OPEN_FREE_TABLE, ready: 2, bill_requested: true })).toBe(TABLE_STATE.BILL);
   });
 });
+
+describe("waiter calls on the table", () => {
+  const calling = { ...OPEN_FREE_TABLE, waiter_called: true, pending: 1 };
+
+  it("shows the call before everything else", () => {
+    expect(getTableBadges({ ...calling, bill_requested: true }).map((badge) => badge.text)).toEqual([
+      "Llama al mesero",
+      "Pide la cuenta",
+      "1 pendiente",
+    ]);
+  });
+
+  it("highlights the card, after a bill request", () => {
+    expect(getTableState(calling)).toBe(TABLE_STATE.WAITER);
+    expect(getTableState({ ...calling, bill_requested: true })).toBe(TABLE_STATE.BILL);
+  });
+});

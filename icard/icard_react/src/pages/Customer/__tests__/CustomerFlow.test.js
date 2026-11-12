@@ -15,6 +15,7 @@ jest.mock("../../../api/customer", () => ({
     getOrders: jest.fn(),
     createOrders: jest.fn(),
     requestBill: jest.fn(),
+    callWaiter: jest.fn(),
     getCategories: jest.fn(),
     getProducts: jest.fn(),
     getAllergens: jest.fn(),
@@ -189,6 +190,17 @@ describe("customer menu flow", () => {
     expect(await screen.findByText("Ya pediste la cuenta. El personal viene en camino.")).toBeInTheDocument();
     expect(customerApi.requestBill).toHaveBeenCalledWith(TOKEN);
     expect(screen.queryByRole("button", { name: "Pedir la cuenta" })).not.toBeInTheDocument();
+  });
+
+  it("lets the guest call the waiter until someone attends", async () => {
+    customerApi.getOrders.mockResolvedValue([]);
+    customerApi.callWaiter.mockResolvedValue({ ...OPEN_TABLE, waiter_called: true });
+    renderCustomer(`/client/${TOKEN}/orders`);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Llamar al mesero" }));
+
+    expect(await screen.findByRole("button", { name: "Mesero avisado" })).toBeDisabled();
+    expect(customerApi.callWaiter).toHaveBeenCalledWith(TOKEN);
   });
 
   it("shows the tags and what each product contains", async () => {

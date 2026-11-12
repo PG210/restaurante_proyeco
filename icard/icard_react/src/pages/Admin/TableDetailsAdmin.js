@@ -164,6 +164,7 @@ export function TableDetailsAdmin() {
           onOpen={() => runTableAction(tableApi.open)}
           onClose={onCloseTable}
           onAttendBill={() => runTableAction(tableApi.attendBill)}
+          onAttendWaiter={() => runTableAction(tableApi.attendWaiter)}
         />
       )}
 

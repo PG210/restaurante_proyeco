@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PERMISSIONS } from "../../../../utils/permissions";
-import { TableControls } from "../TableControls/TableControls";
+import { ATTEND_WAITER_LABEL, TableControls } from "../TableControls/TableControls";
 
 const WAITER = {
   is_staff: false,
@@ -12,7 +12,7 @@ const CLOSED_TABLE = { id: 1, number: 5, is_open: false, bill_requested: false }
 const OPEN_TABLE_WITH_BILL = { ...CLOSED_TABLE, is_open: true, bill_requested: true };
 
 function renderControls(table, user) {
-  const handlers = { onOpen: jest.fn(), onClose: jest.fn(), onAttendBill: jest.fn() };
+  const handlers = { onOpen: jest.fn(), onClose: jest.fn(), onAttendBill: jest.fn(), onAttendWaiter: jest.fn() };
   render(<TableControls table={table} user={user} busy={false} {...handlers} />);
   return handlers;
 }
@@ -43,10 +43,19 @@ describe("TableControls", () => {
     expect(onAttendBill).toHaveBeenCalled();
   });
 
+  it("shows the waiter call and lets the waiter attend it", () => {
+    const { onAttendWaiter } = renderControls({ ...OPEN_TABLE_WITH_BILL, waiter_called: true }, WAITER);
+
+    expect(screen.getByText("Llama al mesero")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: ATTEND_WAITER_LABEL }));
+    expect(onAttendWaiter).toHaveBeenCalled();
+  });
+
   it("shows the table state to a cook but no actions", () => {
-    renderControls(OPEN_TABLE_WITH_BILL, COOK);
+    renderControls({ ...OPEN_TABLE_WITH_BILL, waiter_called: true }, COOK);
 
     expect(screen.getByText("Abierta")).toBeInTheDocument();
+    expect(screen.getByText("Llama al mesero")).toBeInTheDocument();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 });

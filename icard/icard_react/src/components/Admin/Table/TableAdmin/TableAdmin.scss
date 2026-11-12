@@ -48,6 +48,14 @@
     border-color: #db2828;
   }
 
+  &--waiter {
+    border-color: #fbbd08;
+  }
+
+  &__bell.icon {
+    margin-left: 0.3em;
+  }
+
   &--closed svg {
     opacity: 0.4;
   }

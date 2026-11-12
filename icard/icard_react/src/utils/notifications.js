@@ -1,5 +1,8 @@
+import { formatWaitingTime, getWaitingMinutes } from "./orderStatus";
+
 export const NOTIFICATION_TYPE = {
   BILL: "bill",
+  WAITER: "waiter",
   PAYMENT: "payment",
   ORDER: "order",
   STOCK: "stock",
@@ -33,6 +36,19 @@ function billNotifications(tablesSummary) {
       tableId: table.id,
       tableNumber: table.number,
       text: `Mesa ${table.number} pide la cuenta`,
+    }));
+}
+
+function waiterNotifications(tablesSummary, now) {
+  return (tablesSummary || [])
+    .filter((table) => table.waiter_called)
+    .map((table) => ({
+      key: `waiter-${table.id}`,
+      type: NOTIFICATION_TYPE.WAITER,
+      tableId: table.id,
+      tableNumber: table.number,
+      createdAt: table.waiter_called_at,
+      text: `Mesa ${table.number} llama al mesero (hace ${formatWaitingTime(getWaitingMinutes(table.waiter_called_at, now))})`,
     }));
 }
 
@@ -92,9 +108,10 @@ export function buildNotifications(
   guestOrders,
   tablesSummary,
   lastSeen,
-  { includePayments = false, lowStockProducts = [], stockPath = null } = {},
+  { includePayments = false, lowStockProducts = [], stockPath = null, now = Date.now() } = {},
 ) {
   return [
+    ...waiterNotifications(tablesSummary, now),
     ...billNotifications(tablesSummary),
     ...(includePayments ? paymentNotifications(tablesSummary) : []),
     ...orderNotifications(guestOrders, lastSeen),
@@ -104,4 +121,17 @@ export function buildNotifications(
 
 export function hasOrderNotifications(notifications) {
   return notifications.some((notification) => notification.type === NOTIFICATION_TYPE.ORDER);
+}
+
+/** Notifications that ring: something a guest did. Stock and pending payments only show in the bell. */
+const ALERT_TYPES = [NOTIFICATION_TYPE.WAITER, NOTIFICATION_TYPE.BILL, NOTIFICATION_TYPE.ORDER];
+
+/**
+ * One key per guest event. The time is part of the key so a new order from a table that
+ * already had an unread one, or a second call after the first was attended, rings again.
+ */
+export function alertKeys(notifications) {
+  return notifications
+    .filter((notification) => ALERT_TYPES.includes(notification.type))
+    .map((notification) => `${notification.key}@${notification.createdAt ?? ""}`);
 }

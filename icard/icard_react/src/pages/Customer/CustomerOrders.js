@@ -17,6 +17,9 @@ export function customerOrdersTotal(orders) {
     .reduce((total, order) => total + Number(order.price ?? 0) * order.quantity, 0);
 }
 
+export const CALL_WAITER_LABEL = "Llamar al mesero";
+export const WAITER_CALLED_LABEL = "Mesero avisado";
+
 export function hasAwaitingPayment(orders) {
   return orders.some((order) => order.status === ORDER_STATUS.AWAITING_PAYMENT);
 }
@@ -25,6 +28,7 @@ export function CustomerOrders() {
   const { token, table, setTable, isPaused, pauseOnThrottle } = useCustomer();
   const [orders, setOrders] = useState(null);
   const [requestingBill, setRequestingBill] = useState(false);
+  const [callingWaiter, setCallingWaiter] = useState(false);
 
   const loadOrders = useCallback(async () => {
     if (isPaused()) return;
@@ -52,6 +56,19 @@ export function CustomerOrders() {
       notifyError(error);
     } finally {
       setRequestingBill(false);
+    }
+  };
+
+  const callWaiter = async () => {
+    setCallingWaiter(true);
+    try {
+      setTable(await customerApi.callWaiter(token));
+      toast.success("Avisamos al mesero.");
+    } catch (error) {
+      pauseOnThrottle(error);
+      notifyError(error);
+    } finally {
+      setCallingWaiter(false);
     }
   };
 
@@ -87,6 +104,19 @@ export function CustomerOrders() {
           Pedir la cuenta
         </Button>
       )}
+
+      <Button
+        fluid
+        basic
+        size="large"
+        color="blue"
+        icon="hand paper outline"
+        className="customer-orders__waiter"
+        content={table.waiter_called ? WAITER_CALLED_LABEL : CALL_WAITER_LABEL}
+        loading={callingWaiter}
+        disabled={table.waiter_called || callingWaiter}
+        onClick={callWaiter}
+      />
     </>
   );
 }

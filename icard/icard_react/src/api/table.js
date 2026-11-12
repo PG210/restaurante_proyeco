@@ -9,5 +9,6 @@ export const tableApi = {
   open: (id) => apiRequest(tableActionPath(id, "open"), { method: "POST" }),
   close: (id) => apiRequest(tableActionPath(id, "close"), { method: "POST" }),
   attendBill: (id) => apiRequest(tableActionPath(id, "attend-bill"), { method: "POST" }),
+  attendWaiter: (id) => apiRequest(tableActionPath(id, "attend-waiter"), { method: "POST" }),
   regenerateToken: (id) => apiRequest(tableActionPath(id, "regenerate-token"), { method: "POST" }),
 };
